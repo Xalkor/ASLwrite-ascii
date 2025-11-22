@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Jison Demo</title>
+</head>
+<body>
+  <h1>Expression Parser Demo</h1>
+
+  <input id="expr" value="1 + 2 * 3" style="width:200px;">
+  <button onclick="run()">Parse</button>
+
+  <pre id="output"></pre>
+
+  <!-- Include the generated parser -->
+  <script src="grammar.js"></script>
+
+  <script>
+    function run() {
+      const input = document.getElementById("expr").value;
+      try {
+        grammar.parse(input);
+        const result = window.rootNode;
+        document.getElementById("output").textContent = "Result:\n" + result.debugTreeString();
+      } catch (e) {
+        document.getElementById("output").textContent = "Error:\n" + e;
+      }
+    }
+  </script>
+</body>
+</html>

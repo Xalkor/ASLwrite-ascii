@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ASLwrite ASCII Demo</title>
+  <link rel="stylesheet" type="text/css" href="document-style.css">
+</head>
+<body>
+  <h1>ASLwrite ASCII Demo</h1>
+
+  <textarea id="expr" style="width:200px;">(L s)[TL,|-.](R s)</textarea>
+  <button onclick="run()">Parse</button>
+
+  <pre id="tree-output"></pre>
+  <div id="document-area"></div>
+
+  <!-- Include the generated parser -->
+  <script src="asl_write_ascii.js"></script>
+
+  <script>
+    function run() {
+      const input = document.getElementById("expr").value;
+      try {
+        asl_write_ascii.parse(input);
+        const documentCode = window.rootNode;
+        document.getElementById("tree-output").textContent = "Result:\n" + documentCode.debugTreeString();
+        let compiledDocument = documentCode.eval();
+        compiledDocument.forEach(word => {
+          document.getElementById("document-area").appendChild(word);
+        });
+      } catch (e) {
+        document.getElementById("tree-output").textContent = "Error:\n" + e;
+      }
+    }
+  </script>
+</body>
+</html>

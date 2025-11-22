@@ -1,0 +1,15 @@
+#document-area {
+    background-color: #DDDDFF;
+    width: 100vw;
+    min-height: 10vh;
+}
+
+#document-area img {
+    display: inline-block;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+._flip {
+    transform: scale(-1, 1);
+}

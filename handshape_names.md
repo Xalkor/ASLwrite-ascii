@@ -1,0 +1,46 @@
+- 0-num
+- 0-flat
+- 1-num
+- 1-claw
+- 1-d
+- 1-i
+- 2-num
+- 2-bend
+- 2-claw
+- 2-close
+- 2-cross
+- 3-num
+- 3-claw
+- 3-close
+- 3-flat
+- 3-k
+- 4-num
+- 4-close
+- 4-claw
+- 5-num
+- 5-close
+- 5-claw
+- 5-half
+- 5-bend
+- 5-c
+- 6-num
+- 6-claw
+- 6-inverse
+- 7-num
+- 7-8
+- 8-num
+- 8-inverse
+- 8-open
+- 9-num
+- 10-num
+- 10-a
+- 10-s
+- 10-t
+- 20-num
+- 1-thumb
+- 20-claw
+- 20-g
+
+```js
+const digits = ["0-num","0-flat","1-num","1-claw","1-d","1-i","2-num","2-bend","2-claw","2-close","2-cross","3-num","3-claw","3-close","3-flat","3-k","4-num","4-close","4-claw","5-num","5-close","5-claw","5-half","5-bend","5-c","6-num","6-claw","6-inverse","7-num","7-8","8-num","8-inverse","8-open","9-num","10-num","10-a","10-s","10-t","20-num","1-thumb","20-claw","20-g"];
+```
