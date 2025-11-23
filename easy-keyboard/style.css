@@ -1,0 +1,182 @@
+body {}
+.boards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  width: 100vw;
+  font-family: sans-serif;
+  flex-wrap: wrap;
+  /* background-color: red; */
+}
+.bodies {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 50vw;
+  font-family: sans-serif;
+  flex-wrap: wrap;
+  /* background-color: cyan; */
+}
+.hand-shapes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 50vw;
+  font-family: sans-serif;
+  flex-wrap: wrap;
+   /* background-color: magenta; */
+}
+.bodies p {
+  width: 100%;
+  text-align: center;
+}
+.boards p {
+  width: 100%;
+  text-align: center;
+}
+.body {
+  height:80%;
+  aspect-ratio: 0.45;
+  max-width: 50%;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 3%;              /* like TikZ node distance */
+  justify-items: center;
+  align-items: center;
+  background: #eee;
+  padding: 1%;
+  margin-left: 1%;
+  margin-right: 1%;
+  border-radius: 5%;
+}
+.keyboard {
+  
+  width: 50%;
+
+  display: flex;
+  justify-content: space-around; /* Distribute children with space around them */
+  gap: 10%;
+
+  background: #eee;
+  padding: 1%;
+  margin-left: 1%;
+  margin-right: 1%;
+  border-radius: 5%;
+}
+.body img {
+  width: 100%;
+  height: auto;
+  object-fit: fill; 
+}
+.display-mark {
+  width: 100%;
+  height: 100%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.display-mark:hover {
+  box-shadow: 0px 0px 0px 3px #000000;
+}
+.display-mark p {
+  position: absolute;
+  bottom: -1rem;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: auto;
+}
+.forehead {
+  grid-column: 2;
+}
+.chin {
+  grid-column: 2;
+}
+.neck {
+  grid-column: 2;
+}
+.shoulders {
+  grid-column: span 3;
+  display: block;
+}
+.arm {
+  grid-column: span 2;
+  display: block;
+}
+.waist {
+  grid-column: 3;
+  grid-row: span 2;
+  display: block;
+}
+.back-head {
+  grid-column: 1;
+  grid-row: span 2;
+}
+.head {
+  grid-column: 2;
+  grid-row: span 3;
+}
+.forehead-nose {
+  grid-column: 3;
+}
+.nose {
+  grid-column: 3;
+}
+.nose-chin {
+  grid-column: 3;
+}
+.torso {
+  grid-column: 2;
+  grid-row: span 2;
+}
+.knee {
+  grid-column: 3;
+  grid-row: 5;
+}
+.display-hand {
+  width: 4rem;
+  height: 4rem;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  float: left;
+}
+.display-hand:hover {
+  box-shadow: 0px 0px 0px 3px #000000;
+}
+.document {
+  background: #eee;
+  padding: 1rem;
+  border-radius: 12px;
+  /* height: 80vh; */
+  margin-top: 1rem;
+}
+.cursor {
+  display: inline-block;
+  background: none;
+  border: 3px solid #000;
+  min-width: 3rem;
+  min-height: 3rem;
+}
+
+.cursor img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+}
+.blink {
+  animation: blink 0.6s cubic-bezier(0.87, 0, 0.13, 1) infinite alternate;
+}
+@keyframes blink {
+  0%   { border-color: rgba(0, 0, 0, 0.2); }
+  100% { border-color: rgba(0, 0, 0, 1); }
+}

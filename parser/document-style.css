@@ -1,15 +1,99 @@
-#document-area {
-    background-color: #DDDDFF;
-    width: 100vw;
+textarea {
+    min-width: 96vw;
     min-height: 10vh;
 }
 
-#document-area img {
-    display: inline-block;
-    padding-left: 1rem;
-    padding-right: 1rem;
+#document-area {
+    background-color: #DDDDFF;
+    width: 98vw;
+    min-height: 10vh;
 }
 
-._flip {
+.flip {
     transform: scale(-1, 1);
+}
+
+.group-positioned-container {
+    position: relative;
+    display: inline-block;
+}
+
+.group-segment {
+    position: relative;
+    display: inline-block;
+}
+
+.group-segment img,
+.group-positioned img {
+    display: block;
+}
+
+.group-positioned {
+    position: absolute;
+}
+
+/* Directional positioning - relative to parent */
+.position-r {
+    left: 100%;
+    top: 0;
+}
+
+.position-l {
+    right: 100%;
+    top: 0;
+}
+
+.position-u {
+    bottom: 100%;
+    left: 0;
+}
+
+.position-d {
+    top: 100%;
+    left: 0;
+}
+
+.empty-group {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px dashed #ccc;
+}
+
+.arrow-container {
+    position: absolute;
+    z-index: 10;
+}
+
+.arrow-direction-b {
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.arrow-direction-u {
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+}
+
+.arrow-direction-r {
+    left: 100%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.arrow-direction-l {
+    right: 100%;
+    top: 50%;
+    transform: translate(50%, -50%);
+}
+
+.arrow-indicator {
+    font-size: 10px;
+    font-family: monospace;
+    background-color: none;
+    padding: 2px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
 }

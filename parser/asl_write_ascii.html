@@ -8,8 +8,9 @@
 <body>
   <h1>ASLwrite ASCII Demo</h1>
 
-  <textarea id="expr" style="width:200px;">(R 5-num)(R 5-claw)
-(L 5-num)(L 5-claw)</textarea>
+  <textarea id="expr" style="width:200px;">( (R 5-num)  [R] (L 5-num)  )
+             [B,-.]
+( (L 5-claw) [R] (R 5-claw) )</textarea>
   <button onclick="run()">Parse</button>
 
   <pre id="tree-output"></pre>
@@ -19,15 +20,163 @@
   <script src="asl_write_ascii.js"></script>
 
   <script>
+    function drawArrows(container) {
+      const arrowContainers = container.querySelectorAll('.arrow-container');
+      
+      arrowContainers.forEach(arrowContainer => {
+          const svg = arrowContainer.querySelector('.arrow-svg');
+          if (!svg) return;
+          
+          const line = svg.querySelector('.arrow-line');          
+
+          let fromSibling = arrowContainer.previousElementSibling;
+          const fromRect = fromSibling.getBoundingClientRect();
+          const fromCenterX = fromRect.x + fromRect.width / 2;
+          const fromCenterY = fromRect.y + fromRect.height / 2;
+          console.log(fromSibling);
+          console.log(fromCenterX, fromCenterY);
+
+          let toSibling = arrowContainer.nextElementSibling;
+          const toRect = toSibling.getBoundingClientRect();
+          const toCenterX = toRect.x + toRect.width / 2;
+          const toCenterY = toRect.y + toRect.height / 2;
+          console.log(toSibling);
+          console.log(toCenterX, toCenterY);
+
+          const arrowRect = arrowContainer.getBoundingClientRect();
+          const fromRelX = fromCenterX - arrowRect.x;
+          const fromRelY = fromCenterY - arrowRect.y;
+          const toRelX = toCenterX - arrowRect.x;
+          const toRelY = toCenterY - arrowRect.y;
+          
+          const minX = Math.min(fromRelX, toRelX);
+          const minY = Math.min(fromRelY, toRelY);
+          const maxX = Math.max(fromRelX, toRelX);
+          const maxY = Math.max(fromRelY, toRelY);
+          
+          const strokeWidth = Number(line.getAttribute('stroke-width')) * 3;
+          let w = maxX - minX;
+          let h = maxY - minY;
+          let xOff = 0;
+          let yOff = 0;
+          svg.style.left = minX + 'px';
+          svg.style.top = minY + 'px';
+          if(maxX - minX < strokeWidth) {
+            w = strokeWidth;
+            xOff = strokeWidth/2;
+          }
+          if(maxY - minY < strokeWidth) {
+            h = strokeWidth;
+            yOff = strokeWidth/2;
+          }
+
+          const x1 = fromRelX - minX + xOff;
+          const y1 = fromRelY - minY + yOff;    
+          const x2 = toRelX - minX + xOff;
+          const y2 = toRelY - minY + yOff;    
+
+          line.setAttribute('x1', x1);
+          line.setAttribute('y1', y1);
+          line.setAttribute('x2', x2);
+          line.setAttribute('y2', y2);
+
+          const dx = x2-x1;
+          const dy = y2-y1;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const dirX = dx / length;
+          const dirY = dy / length;
+
+          const dots = svg.querySelectorAll('.arrow-dot');
+          const dotSpacing = strokeWidth;
+
+          console.log('w: ', w, dirX*(dots.length+1)*dotSpacing, (w + dirX*(dots.length+1)*dotSpacing));
+          console.log('h: ', h, dirY*(dots.length+1)*dotSpacing, (h + dirY*(dots.length+1)*dotSpacing));
+
+          svg.style.width = (w + dirX*(dots.length+1)*dotSpacing) + 'px';
+          svg.style.height = (h + dirY*(dots.length+1)*dotSpacing) + 'px';
+
+          console.log('size: ', svg.style.width, svg.style.height);
+
+          dots.forEach((dot, i) => {
+              console.log(dot, i);
+              const offset = (i + 1) * dotSpacing;
+              const dotX = x2 + dirX * offset;
+              const dotY = y2 + dirY * offset;
+              
+              dot.setAttribute('cx', dotX);
+              dot.setAttribute('cy', dotY);
+              dot.setAttribute('r', strokeWidth*0.4);
+          });
+      });
+    }
+
+    function calculateBoundsRecursive(element) {
+      const nestedContainers = element.querySelectorAll('.group-positioned-container');
+      nestedContainers.forEach(container => {
+          if (container !== element) {
+              const bounds = calculateBounds(container);
+              container.style.width = bounds.width + 'px';
+              container.style.height = bounds.height + 'px';
+              
+              if (bounds.minX < 0 || bounds.minY < 0) {
+                  adjustPositions(container, -bounds.minX, -bounds.minY);
+              }
+          }
+      });
+      
+      const bounds = calculateBounds(element);
+      element.style.width = bounds.width + 'px';
+      element.style.height = bounds.height + 'px';
+      
+      if (bounds.minX < 0 || bounds.minY < 0) {
+          adjustPositions(element, -bounds.minX, -bounds.minY);
+      }
+    }
+
+    function calculateBounds(element) {
+      const rect = element.getBoundingClientRect();
+      console.log('INITIAL Container rect:', rect.width, rect.height);
+      let minX = 0, minY = 0, maxX = rect.width, maxY = rect.height;
+      
+      const positioned = element.querySelectorAll('.group-positioned');
+      positioned.forEach(el => {
+          const elRect = el.getBoundingClientRect();
+          const parentRect = element.getBoundingClientRect();
+          
+          const relX = elRect.left - parentRect.left;
+          const relY = elRect.top - parentRect.top;
+          
+          minX = Math.min(minX, relX);
+          minY = Math.min(minY, relY);
+          maxX = Math.max(maxX, relX + elRect.width);
+          maxY = Math.max(maxY, relY + elRect.height);
+      });
+      
+      console.log('Final bounds:', {minX, minY, width: maxX - minX, height: maxY - minY});
+
+      return {
+          minX,
+          minY,
+          width: maxX - minX,
+          height: maxY - minY
+      };
+    }
+
     function run() {
       const input = document.getElementById("expr").value;
       try {
         asl_write_ascii.parse(input);
         const documentCode = window.rootNode;
         document.getElementById("tree-output").textContent = "Result:\n" + documentCode.debugTreeString();
+        
+        const area = document.getElementById("document-area");
+        area.innerHTML = ''; // Clear previous content
+        
         let compiledDocument = documentCode.eval();
         compiledDocument.forEach(word => {
-          document.getElementById("document-area").appendChild(word);
+            area.appendChild(word);
+            calculateBoundsRecursive(word);
+            drawArrows(word);
         });
       } catch (e) {
         document.getElementById("tree-output").textContent = "Error:\n" + e;

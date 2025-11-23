@@ -72,12 +72,12 @@
   }
 */
 var asl_write_ascii = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,3],$V1=[1,5],$V2=[1,11],$V3=[5,7,8],$V4=[1,16],$V5=[1,17],$V6=[1,18],$V7=[1,19],$V8=[1,20],$V9=[1,21],$Va=[1,33];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,3],$V1=[1,5],$V2=[1,7],$V3=[2,8],$V4=[1,11],$V5=[1,17],$V6=[1,18],$V7=[1,19],$V8=[1,20],$V9=[1,21],$Va=[1,22],$Vb=[5,7,9,10],$Vc=[1,31];
 var parser = {trace: function trace () { },
 yy: {},
-symbols_: {"error":2,"Document":3,"GroupList":4,"EOF":5,"Group":6,"(":7,")":8,"Grapheme":9,"[":10,"Connector":11,"]":12,"Iden":13,"Diacritic":14,",":15,"Arrow":16,"IDEN":17,"CARET":18,"AT_SIGN":19,"TWIDDLE":20,"QUOTE":21,"PIPE":22,"UNDERSCORE":23,"VerticalArrow":24,"HorizontalArrow":25,"DASH":26,"DOTS":27,"BANG":28,"GT":29,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",7:"(",8:")",10:"[",12:"]",15:",",17:"IDEN",18:"CARET",19:"AT_SIGN",20:"TWIDDLE",21:"QUOTE",22:"PIPE",23:"UNDERSCORE",26:"DASH",27:"DOTS",28:"BANG",29:"GT"},
-productions_: [0,[3,1],[4,1],[4,2],[6,2],[6,3],[6,3],[6,9],[9,1],[9,2],[9,3],[9,2],[11,1],[11,3],[13,1],[14,1],[14,1],[14,1],[14,1],[14,1],[14,1],[16,1],[16,1],[24,2],[25,2],[25,2],[25,3]],
+symbols_: {"error":2,"Document":3,"GroupList":4,"EOF":5,"GroupChain":6,"(":7,"Group":8,")":9,"[":10,"Connector":11,"]":12,"Grapheme":13,"IDEN":14,"Diacritic":15,",":16,"Arrow":17,"CARET":18,"AT_SIGN":19,"TWIDDLE":20,"QUOTE":21,"PIPE":22,"UNDERSCORE":23,"VerticalArrow":24,"HorizontalArrow":25,"DASH":26,"DOTS":27,"BANG":28,"GT":29,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",7:"(",9:")",10:"[",12:"]",14:"IDEN",16:",",18:"CARET",19:"AT_SIGN",20:"TWIDDLE",21:"QUOTE",22:"PIPE",23:"UNDERSCORE",26:"DASH",27:"DOTS",28:"BANG",29:"GT"},
+productions_: [0,[3,1],[4,1],[4,2],[6,3],[6,7],[8,1],[8,1],[8,0],[13,3],[13,2],[13,2],[13,1],[11,1],[11,3],[15,1],[15,1],[15,1],[15,1],[15,1],[15,1],[17,1],[17,1],[24,2],[25,2],[25,2],[25,3]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -87,49 +87,46 @@ case 1:
  window.rootNode = $$[$0]; this.$ = $$[$0]; 
 break;
 case 2:
- console.log('C'); this.$ = new GroupList(); 
+ this.$ = new GroupList(); 
 break;
 case 3:
- console.log('D', $$[$0], $$[$0-1]); this.$ = $$[$0].push($$[$0-1]); 
+ this.$ = $$[$0].push($$[$0-1]); 
 break;
 case 4:
- this.$ = new Group(null, null, null); 
+ this.$ = new Group($$[$0-1]); 
 break;
 case 5:
- this.$ = $$[$0-1]; 
+ this.$ = $$[$0-6].push([$$[$0-1], $$[$0-4]]); 
 break;
 case 6:
- this.$ = new Group($$[$0-1], null, null); 
+ this.$ = $$[$0] 
 break;
-case 7:
- this.$ = new Group($$[$0-7], $$[$0-4], $$[$0-1]); 
+case 7: case 21: case 22:
+ this.$ = $$[$0]; 
 break;
 case 8:
- this.$ = new Grapheme($$[$0]); 
+ this.$ = null; 
 break;
 case 9:
- this.$ = new Grapheme($$[$0], $$[$0-1]); 
+ this.$ = new Grapheme(new Iden($$[$0-1]), new Iden($$[$0-2]), $$[$0]); 
 break;
 case 10:
- this.$ = new Grapheme($$[$0-1], $$[$0-2], $$[$0]); 
+ this.$ = new Grapheme(new Iden($$[$0]), new Iden($$[$0-1])); 
 break;
 case 11:
- this.$ = new Grapheme($$[$0-1], null, $$[$0]); 
+ this.$ = new Grapheme(new Iden($$[$0-1]), null, $$[$0]); 
 break;
 case 12:
- this.$ = new Connector($$[$0], new NullArrow()); 
+ this.$ = new Grapheme(new Iden($$[$0])); 
 break;
 case 13:
- this.$ = new Connector($$[$0-2], $$[$0]); 
+ this.$ = new Connector(new Iden($$[$0]), new NullArrow()); 
 break;
 case 14:
- this.$ = new Iden($$[$0]); 
+ this.$ = new Connector(new Iden($$[$0-2]), $$[$0]); 
 break;
 case 15: case 16: case 17: case 18: case 19: case 20:
  this.$ = new Diacritic($$[$0]); 
-break;
-case 21: case 22:
- this.$ = $$[$0]; 
 break;
 case 23:
  this.$ = $$[$0].setVertical(); 
@@ -145,8 +142,8 @@ case 26:
 break;
 }
 },
-table: [{3:1,4:2,5:$V0,6:4,7:$V1},{1:[3]},{1:[2,1]},{1:[2,2]},{4:6,5:$V0,6:4,7:$V1},{6:8,7:$V1,8:[1,7],9:9,13:10,17:$V2},{1:[2,3]},o($V3,[2,4]),{8:[1,12]},{8:[1,13]},{8:[2,8],13:14,14:15,17:$V2,18:$V4,19:$V5,20:$V6,21:$V7,22:$V8,23:$V9},o([8,12,15,17,18,19,20,21,22,23],[2,14]),o($V3,[2,5],{10:[1,22]}),o($V3,[2,6]),{8:[2,9],14:23,18:$V4,19:$V5,20:$V6,21:$V7,22:$V8,23:$V9},{8:[2,11]},{8:[2,15]},{8:[2,16]},{8:[2,17]},{8:[2,18]},{8:[2,19]},{8:[2,20]},{11:24,13:25,17:$V2},{8:[2,10]},{12:[1,26]},{12:[2,12],15:[1,27]},{7:[1,28]},{16:29,22:[1,32],24:30,25:31,26:$Va},{6:34,7:$V1},{12:[2,13]},{12:[2,21]},{12:[2,22]},{25:35,26:$Va},{27:[1,36],28:[1,37],29:[1,38]},{8:[1,39]},{12:[2,23]},{12:[2,24]},{12:[2,25]},{27:[1,40]},o($V3,[2,7]),{12:[2,26]}],
-defaultActions: {2:[2,1],3:[2,2],6:[2,3],15:[2,11],16:[2,15],17:[2,16],18:[2,17],19:[2,18],20:[2,19],21:[2,20],23:[2,10],29:[2,13],30:[2,21],31:[2,22],35:[2,23],36:[2,24],37:[2,25],40:[2,26]},
+table: [{3:1,4:2,5:$V0,6:4,7:$V1},{1:[3]},{1:[2,1]},{1:[2,2]},{4:6,5:$V0,6:4,7:$V1,10:$V2},{6:10,7:$V1,8:8,9:$V3,13:9,14:$V4},{1:[2,3]},{11:12,14:[1,13]},{9:[1,14]},{9:[2,6]},{9:[2,7],10:$V2},{9:[2,12],14:[1,15],15:16,18:$V5,19:$V6,20:$V7,21:$V8,22:$V9,23:$Va},{12:[1,23]},{12:[2,13],16:[1,24]},o($Vb,[2,4]),{9:[2,10],15:25,18:$V5,19:$V6,20:$V7,21:$V8,22:$V9,23:$Va},{9:[2,11]},{9:[2,15]},{9:[2,16]},{9:[2,17]},{9:[2,18]},{9:[2,19]},{9:[2,20]},{7:[1,26]},{17:27,22:[1,30],24:28,25:29,26:$Vc},{9:[2,9]},{6:10,7:$V1,8:32,9:$V3,13:9,14:$V4},{12:[2,14]},{12:[2,21]},{12:[2,22]},{25:33,26:$Vc},{27:[1,34],28:[1,35],29:[1,36]},{9:[1,37]},{12:[2,23]},{12:[2,24]},{12:[2,25]},{27:[1,38]},o($Vb,[2,5]),{12:[2,26]}],
+defaultActions: {2:[2,1],3:[2,2],6:[2,3],9:[2,6],16:[2,11],17:[2,15],18:[2,16],19:[2,17],20:[2,18],21:[2,19],22:[2,20],25:[2,9],27:[2,14],28:[2,21],29:[2,22],33:[2,23],34:[2,24],35:[2,25],38:[2,26]},
 parseError: function parseError (str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -296,6 +293,8 @@ parse: function parse(input) {
 
 window.rootNode = null;
 
+const DEBUG = false;
+
 let vars = {
     '_font' : '../font',
     '_default-hand': 'R'
@@ -305,6 +304,8 @@ class Node {
     constructor() { 
         if (this.constructor == Node) {
             throw new Error("Abstract classes can't be instantiated.");
+        } else if (DEBUG) {
+            console.log(`new ${this.constructor.name} created:`);
         }
     }
     debugTreeString() { return this._debugTreeString('', '', true, true); }
@@ -319,6 +320,7 @@ class GroupList extends Node {
     }
 
     push(group) {
+        if(DEBUG) console.log(`group added to list`);
         this.groups.push(group);
         return this;
     }
@@ -329,7 +331,7 @@ class GroupList extends Node {
 
         for(let i = this.groups.length-1; i >= 0 ; i--) {
             let lastGroup = i == 0;
-            let indent =  (root ? '' : (last ? '         ' : ' |       '));
+            let indent =  (root ? '' : (last ? '         ' : ' │       '));
             let newArc = !lastGroup ? " ├───────:" : " └───────:";
             let nl = !lastGroup ? "\n" : "";
             s += `${this.groups[i]._debugTreeString(prefix + indent, newArc, lastGroup, false)}${nl}`;
@@ -344,35 +346,89 @@ class GroupList extends Node {
 }
 
 class Group extends Node {
-    constructor(head, connector = null, tail = null) {
+    constructor(firstGroup = null, connector = null) {
         super();
-        this.head = head;
-        this.connector = connector;
-        this.tail = tail;
+        this.groups = firstGroup === null ? [] : [firstGroup];
+        this.connectors = connector === null ? [] : [connector];
+        if(DEBUG) {
+            console.log(this.debugTreeString());
+        }
+    }
+
+    push([group, connector]) {
+        if(DEBUG) console.log(`group and connector added to group`);
+        this.groups.push(group);
+        this.connectors.push(connector);
+        return this;
     }
 
     _debugTreeString(prefix, arc, last, root) {
+        if(this.groups.length == 0) return `${prefix}${arc}Group{}`;
+
         let s = `${prefix}${arc}Group\n`;
-        if(!this.head) return s;
 
-        let indent =  (root ? '' : (last ? '         ' : ' │       '));
-        let newArc = this.tail ? " ├─head: " : " └─head: ";
-        let nl = this.tail ? "\n" : "";
-        s += `${this.head._debugTreeString(prefix + indent, newArc, !this.tail, false)}${nl}`;
-
-        if (this.connector) {
-            s += `${this.connector._debugTreeString(prefix + indent, " ├─conn: ", !this.tail, false)}\n`;
-        }
-
-        if (this.tail) {
-            s += this.tail._debugTreeString(prefix + indent, " └─tail: ", true, false);
+        for(let i = this.groups.length-1; i >= 0 ; i--) {
+            let lastGroup = i == 0;
+            let indent =  (root ? '' : (last ? '         ' : ' │       '));
+            let newArc = !lastGroup ? " ├───────:" : " └───────:";
+            let nl = !lastGroup ? "\n" : "";
+            s += `${this.groups[i]._debugTreeString(prefix + indent, newArc, lastGroup, false)}${nl}`;
+            if(i != 0)
+                s += `${this.connectors[i-1]._debugTreeString(prefix + indent, newArc, lastGroup, false)}\n`;
         }
 
         return s;
     }
 
     eval() {
-        return this.head.eval();
+        if (this.groups.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-group';
+            return empty;
+        }
+
+        if (this.groups.length === 1) {
+            return this.groups[0].eval();
+        }
+
+        const firstGrapheme = this.groups[0].eval();
+        let currentContainer = document.createElement('div');
+        currentContainer.className = 'group-segment';
+        currentContainer.appendChild(firstGrapheme);
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'group-positioned-container';
+        wrapper.appendChild(currentContainer);
+
+        for (let i = 1; i < this.groups.length; i++) {
+            const groupElement = this.groups[i].eval();
+            
+            const positionedWrapper = document.createElement('div');
+            positionedWrapper.className = 'group-positioned';
+            positionedWrapper.appendChild(groupElement);
+            
+            const connector = this.connectors[i - 1];
+            const direction = connector.iden.asDir();
+            
+            positionedWrapper.classList.add(`position-${direction.toLowerCase()}`);
+            
+            if (connector.arrow && connector.arrow.constructor !== NullArrow) {
+                const arrowContainer = document.createElement('div');
+                arrowContainer.className = 'arrow-container';
+                arrowContainer.classList.add(`arrow-direction-${direction.toLowerCase()}`);
+                
+                const arrowElement = connector.arrow.eval();
+                arrowContainer.appendChild(arrowElement);
+                
+                currentContainer.appendChild(arrowContainer);
+            }
+            
+            currentContainer.appendChild(positionedWrapper);
+            
+            currentContainer = positionedWrapper;
+        }
+
+        return wrapper;
     }
 }
 
@@ -382,6 +438,7 @@ class Grapheme extends Node {
         this.digit = digit;
         this.handedness = handedness;
         this.diacritic = diacritic;
+        if(DEBUG) console.log(this.debugTreeString());
     }
 
     _debugTreeString(prefix, arc, last, root) {
@@ -408,7 +465,7 @@ class Grapheme extends Node {
         }
 
         if(!isRight) {
-            digitImg.classList.add('_flip');
+            digitImg.classList.add('flip');
         }
 
         return digitImg;
@@ -416,10 +473,12 @@ class Grapheme extends Node {
 }
 
 const digits = ["0-num","0-flat","1-num","1-claw","1-d","1-i","2-num","2-bend","2-claw","2-close","2-cross","3-num","3-claw","3-close","3-flat","3-k","4-num","4-close","4-claw","5-num","5-close","5-claw","5-half","5-bend","5-c","6-num","6-claw","6-inverse","7-num","7-8","8-num","8-inverse","8-open","9-num","10-num","10-a","10-s","10-t","20-num","1-thumb","20-claw","20-g"];
+const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "U", "UR", "R", "BR", "B", "BL", "L", "UL"];
 class Iden extends Node {
     constructor(val) {
         super();
         this.val = val;
+        if(DEBUG) console.log(this.debugTreeString());
     }
 
     _debugTreeString(prefix, arc, last, root) {
@@ -441,6 +500,14 @@ class Iden extends Node {
         throw new Error(`"${this.val}" is not a valid hand name, must be L or R`);
     }
 
+    asDir() {
+        let upVal = this.val.toUpperCase();
+        if(dirs.includes(this.val)) { 
+            return upVal;
+        }
+        throw new Error(`"${this.val}" is not a valid direction name`);
+    }
+
     eval() {}
 }
 
@@ -448,6 +515,7 @@ class Diacritic extends Node {
     constructor(type) {
         super();
         this.type = type;
+        if(DEBUG) console.log(this.debugTreeString());
     }
 
     _debugTreeString(prefix, arc, last, root) {
@@ -462,17 +530,18 @@ class Connector extends Node {
         super();
         this.iden = iden;
         this.arrow = arrow;
+        if(DEBUG) console.log(this.debugTreeString());
     }
 
     _debugTreeString(prefix, arc, last, root) {
-        return `${prefix}${arc}[${this.iden._debugTreeString('','')}, ${this.arrow._debugTreeString()}]`;
+        return `${prefix}${arc}Connector{${this.iden._debugTreeString('','')}, ${this.arrow._debugTreeString()}}`;
     }
 
     eval() { };
 }
 
 class NullArrow extends Node {
-    constructor(){ super(); }
+    constructor(){ super(); if(DEBUG) console.log(this.debugTreeString()); }
     _debugTreeString() { return 'Arrow{}'; }
     isNull() { return true; }
 }
@@ -484,6 +553,7 @@ class Arrow extends NullArrow {
         this.firm = firm;
         this.turn = turn;
         this.numEndpoints = numEndpoints;
+        if(DEBUG) console.log(this.debugTreeString());
     }
 
     isNull() { return false; }
@@ -501,7 +571,55 @@ class Arrow extends NullArrow {
         return s + '.'.repeat(this.numEndpoints) + '}';
     }
 
-    eval() { };
+    eval() {
+        // const arrow = document.createElement('span');
+        // arrow.className = 'arrow-indicator';
+        
+        // let arrowText = '';
+        
+        // if (!this.horizontal) {
+        //     arrowText += '|';
+        // }
+        
+        // arrowText += '-';
+        
+        // if (this.firm) {
+        //     arrowText += '!';
+        // } else if (this.turn) {
+        //     arrowText += '>';
+        // }
+        
+        // arrowText += '.'.repeat(this.numEndpoints);
+        
+        // arrow.textContent = arrowText;
+        // return arrow;
+
+        const container = document.createElement('div');
+        container.className = 'arrow-line-container';
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'arrow-svg');
+        svg.dataset.endpoints = this.numEndpoints;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'arrow-line');
+        line.setAttribute('stroke', '#333');
+        line.setAttribute('stroke-width', '2');
+        svg.appendChild(line);
+
+        for(let i = 0; i < this.numEndpoints; i++) {
+            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dot.setAttribute('class', 'arrow-dot');
+            dot.setAttribute('fill', '#333');
+            svg.appendChild(dot);
+        }
+        
+        container.appendChild(svg);
+        
+        return container;
+    }
+
+
 }
 
 /* generated by jison-lex 0.3.4 */
@@ -836,15 +954,15 @@ case 0:/* skip whitespace */
 break;
 case 1:return 7;
 break;
-case 2:return 8;
+case 2:return 9;
 break;
 case 3:return 10;
 break;
 case 4:return 12;
 break;
-case 5:return 15;
+case 5:return 16;
 break;
-case 6:return 17;
+case 6:return 14;
 break;
 case 7:return 18;
 break;
@@ -870,7 +988,7 @@ case 17:return 5;
 break;
 }
 },
-rules: [/^(?:\s+)/,/^(?:\()/,/^(?:\))/,/^(?:\[)/,/^(?:\])/,/^(?:,)/,/^(?:[A-Za-z0-9\-]+)/,/^(?:\^)/,/^(?:@)/,/^(?:~)/,/^(?:")/,/^(?:_\b)/,/^(?:\|)/,/^(?:-)/,/^(?:>)/,/^(?:!)/,/^(?:\.+)/,/^(?:$)/],
+rules: [/^(?:\s+)/,/^(?:\()/,/^(?:\))/,/^(?:\[)/,/^(?:\])/,/^(?:,)/,/^(?:[A-Za-z0-9][A-Za-z0-9\-]*)/,/^(?:\^)/,/^(?:@)/,/^(?:~)/,/^(?:")/,/^(?:_\b)/,/^(?:\|)/,/^(?:-)/,/^(?:>)/,/^(?:!)/,/^(?:\.+)/,/^(?:$)/],
 conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17],"inclusive":true}}
 });
 return lexer;
