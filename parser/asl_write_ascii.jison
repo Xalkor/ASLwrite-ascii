@@ -4,9 +4,89 @@ window.rootNode = null;
 const DEBUG = false;
 
 let vars = {
-    '_font' : '../font',
+    '_font' : '../font-debug',
     '_default-hand': 'R'
 };
+
+// A container for multiple SceneNodes
+class Scene {
+    constructor() {
+        this.children = [];
+    }
+
+    push(node) {
+        this.children.push(node);
+    }
+
+    async render() {
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("xmlns", svgNS);
+
+        let maxX = 0, maxY = 0;
+        for (const child of this.children) {
+            const [w, h] = child.getSize();
+            maxX = Math.max(maxX, (child.x ?? 0) + w);
+            maxY = Math.max(maxY, (child.y ?? 0) + h);
+        }
+
+        svg.setAttribute("width", maxX);
+        svg.setAttribute("height", maxY);
+
+        for (const child of this.children) {
+            const renderedSVG = await child.render(svg);
+            svg.appendChild(renderedSVG);
+        }
+
+        return svg;
+    }
+}
+
+
+async function getSvgSize(src) {
+    console.log(src);
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+class SceneImage {
+    constructor(src, x = 0, y = 0, flip = false) {
+        this.src = src;
+        this.x = x;
+        this.y = y;
+        this.flip = flip;
+        this.offset = 0;
+    }
+
+    getSize() {
+        return [this.width, this.height];
+    }
+
+    async render(svg) {
+        const svgNS = "http://www.w3.org/2000/svg";
+        const img = document.createElementNS(svgNS, "image");
+        img.setAttribute("href", this.src);
+        img.setAttribute("x", this.x);
+        img.setAttribute("y", this.y);
+        console.log(this.x, this.y); //TODO: why NaN here???
+        const {width, height} = await getSvgSize(this.src);
+        console.log(width, height);
+        img.setAttribute("width", width);
+        img.setAttribute("height", height);
+        console.log(img);
+
+        if (this.flip) {
+            //img.setAttribute("transform", `translate(${this.x + this.width}, ${this.y}) scale(-1,1)`);
+            img.setAttribute("transform", `translate(${this.x + this.width*2 + this.offset}, ${this.y}) scale(-1,1)`);
+        }
+
+        return img;
+    }
+}
+
 
 class Node {
     constructor() { 
@@ -19,6 +99,7 @@ class Node {
     debugTreeString() { return this._debugTreeString('', '', true, true); }
     _debugTreeString(prefix, arc, last, root) { throw new Error("Method '_debugTreeString()' must be implemented."); };
     eval() { throw new Error("Method 'eval()' must be implemented."); };
+    async toScene() { throw new Error("Method 'toScene()' must be implemented."); };
 }
 
 class GroupList extends Node {
@@ -50,6 +131,10 @@ class GroupList extends Node {
 
     eval() {
         return this.groups.map((_,i,gs) => gs[gs.length-i-1].eval());
+    }
+
+    async toScene() {
+        return await this.groups[0].toScene();
     }
 }
 
@@ -138,6 +223,46 @@ class Group extends Node {
 
         return wrapper;
     }
+
+    async toScene() {
+        if (this.groups.length === 0) return new Scene();
+        if (this.groups.length === 1) return this.groups[0].toScene();
+
+        const firstScene = await this.groups[0].toScene();
+
+        const scene = new Scene();
+        for (const child of firstScene.children) scene.push(child);
+
+        let prevScene = firstScene;
+        for (let i = 1; i < this.groups.length; i++) {
+            const nextGroup = this.groups[i];
+            const connector = this.connectors[i - 1];
+
+            const nextScene = await nextGroup.toScene();
+
+            const dir = connector.iden.asDir();
+            let dx = 0, dy = 0;
+            const offset = 10;
+            console.log('dir: ', dir);
+            if(dir.includes('N') || dir.includes('U')) dy -= (Math.max(...nextScene.children.map(c => c.height)) + offset);
+            if(dir.includes('S') || dir.includes('B')) dy += (Math.max(...nextScene.children.map(c => c.height)) + offset);
+            if(dir.includes('E') || dir.includes('L')) dx -= (Math.max(...nextScene.children.map(c => c.width )) + offset);
+            if(dir.includes('W') || dir.includes('R')) dx += (Math.max(...nextScene.children.map(c => c.width )) + offset);
+            console.log('dx: ', dx, 'dy: ', dy);
+            for (const c of nextScene.children) {
+                c.x += dx;
+                c.y += dy;
+                c.offset = offset;
+                scene.push(c);
+            }
+
+            // TODO: add arrows from connector.arrow as SceneLine or SceneArrow
+
+            prevScene = nextScene;
+        }
+
+        return scene;
+    }
 }
 
 class Grapheme extends Node {
@@ -177,6 +302,24 @@ class Grapheme extends Node {
         }
 
         return digitImg;
+    }
+
+    async toScene() {
+        const digit = this.digit.val;
+
+        let isRight;
+        if (this.handedness)
+            isRight = this.handedness.asHand() === "R";
+        else
+            isRight = vars["_default-hand"] === "R";
+
+        const src = `${vars._font}/hand-shapes/${digit}.svg`;
+
+        const imgNode = new SceneImage(src, 0, 0, !isRight);
+
+        const scene = new Scene();
+        scene.push(imgNode);
+        return scene;
     }
 }
 

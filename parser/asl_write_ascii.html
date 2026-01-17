@@ -162,7 +162,7 @@
       };
     }
 
-    function run() {
+    async function run() {
       const input = document.getElementById("expr").value;
       try {
         asl_write_ascii.parse(input);
@@ -178,6 +178,11 @@
             calculateBoundsRecursive(word);
             drawArrows(word);
         });
+
+        let scene = await window.rootNode.toScene();
+        let finalSVG = await scene.render();
+        area.appendChild(finalSVG)
+
       } catch (e) {
         document.getElementById("tree-output").textContent = "Error:\n" + e;
       }
