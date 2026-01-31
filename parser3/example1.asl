@@ -1,0 +1,1 @@
+5-num {flip 5-claw}
