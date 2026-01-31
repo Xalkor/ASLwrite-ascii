@@ -33,8 +33,8 @@ parse-debug:
 	$(CC) $(CXXFLAGS) -g $(LEX_ARGS) -o $(OUT_NAME) -DDEBUG=$(DEBUG_LEVEL) lex.yy.c grammar.tab.c node.cpp
 
 clean:
-	rm -f *.tab.cxx
-	rm -f *.tab.hxx
+	rm -f *.tab.c
+	rm -f *.tab.h
 	rm -f *.yy.c
 	rm -f *.output
 	rm -f $(LEX_TARGET)	
