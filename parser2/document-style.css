@@ -1,0 +1,15 @@
+textarea {
+    min-width: 96vw;
+    min-height: 10vh;
+}
+
+#document-area {
+    background-color: #DDDDFF;
+    width: 98vw;
+    min-height: 10vh;
+}
+
+#document-area > svg {
+    width: 4em;   /* controls horizontal size relative to font size */
+    height: auto; /* preserves aspect ratio */
+}

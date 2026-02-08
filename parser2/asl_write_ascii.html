@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ASLwrite ASCII Demo</title>
+  <link rel="stylesheet" type="text/css" href="document-style.css">
+</head>
+<body>
+  <h1>ASLwrite ASCII Demo</h1>
+
+  <textarea id="expr" style="width:200px;">(R 5-num)</textarea>
+  <button onclick="run()">Parse</button>
+
+  <pre id="tree-output"></pre>
+  <div id="document-area"></div>
+
+  <!-- Include the generated parser -->
+  <script src="asl_write_ascii.js"></script>
+
+  <script>
+    async function run() {
+      const input = document.getElementById("expr").value;
+      try {
+        asl_write_ascii.parse(input);
+        const documentCode = window.rootNode;
+        document.getElementById("tree-output").textContent = "Result:\n" + documentCode.debugTreeString();
+        
+        const area = document.getElementById("document-area");
+        area.innerHTML = ''; // Clear previous content
+
+        // let scene = await window.rootNode.toScene();
+        // let finalSVG = await scene.render();
+        // area.appendChild(finalSVG)
+
+        window.renderRoot(window.rootNode, area);
+
+      } catch (e) {
+        document.getElementById("tree-output").textContent = "Error:\n" + e;
+      }
+    }
+  </script>
+</body>
+</html>
