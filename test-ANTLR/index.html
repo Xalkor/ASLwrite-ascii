@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ANTLR Parser Demo</title>
+</head>
+<body>
+    <h1>ANTLR Parser Demo</h1>
+    <input id="expr-input" value="(10+20)*30" size="30">
+    <button id="parse-btn">Parse</button>
+    <pre id="output"></pre>
+
+   <script src="dist/bundle.js"></script>
+    <script>
+    const inputEl = document.getElementById('expr-input');
+    const outputEl = document.getElementById('output');
+    const btn = document.getElementById('parse-btn');
+
+    btn.addEventListener('click', () => {
+        const input = inputEl.value;
+        const result = window.parseExpression(input); // global function now
+        outputEl.textContent = result;
+    });
+    </script>
+</body>
+</html>
