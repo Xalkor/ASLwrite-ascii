@@ -42,14 +42,62 @@ export default class DocumentVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
-	// Visit a parse tree produced by DocumentParser#command.
-	visitCommand(ctx) {
+	// Visit a parse tree produced by DocumentParser#commandGroup.
+	visitCommandGroup(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#assignCommand.
+	visitAssignCommand(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#functionCommand.
+	visitFunctionCommand(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
 
 	// Visit a parse tree produced by DocumentParser#arg.
 	visitArg(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#unarySign.
+	visitUnarySign(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#number.
+	visitNumber(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#parens.
+	visitParens(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#iden.
+	visitIden(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#addSub.
+	visitAddSub(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by DocumentParser#mulDiv.
+	visitMulDiv(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

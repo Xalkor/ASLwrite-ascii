@@ -41,5 +41,7 @@ var prettyHtml = beautify.html(
         preserve_newlines: true,
     }
 );
+
+
 printCodeBlock(prettyHtml);
 fs.writeFileSync(process.argv[3], prettyHtml, 'utf8');

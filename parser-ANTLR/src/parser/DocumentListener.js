@@ -59,12 +59,30 @@ export default class DocumentListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
-	// Enter a parse tree produced by DocumentParser#command.
-	enterCommand(ctx) {
+	// Enter a parse tree produced by DocumentParser#commandGroup.
+	enterCommandGroup(ctx) {
 	}
 
-	// Exit a parse tree produced by DocumentParser#command.
-	exitCommand(ctx) {
+	// Exit a parse tree produced by DocumentParser#commandGroup.
+	exitCommandGroup(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#assignCommand.
+	enterAssignCommand(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#assignCommand.
+	exitAssignCommand(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#functionCommand.
+	enterFunctionCommand(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#functionCommand.
+	exitFunctionCommand(ctx) {
 	}
 
 
@@ -74,6 +92,60 @@ export default class DocumentListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by DocumentParser#arg.
 	exitArg(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#unarySign.
+	enterUnarySign(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#unarySign.
+	exitUnarySign(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#number.
+	enterNumber(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#number.
+	exitNumber(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#parens.
+	enterParens(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#parens.
+	exitParens(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#iden.
+	enterIden(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#iden.
+	exitIden(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#addSub.
+	enterAddSub(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#addSub.
+	exitAddSub(ctx) {
+	}
+
+
+	// Enter a parse tree produced by DocumentParser#mulDiv.
+	enterMulDiv(ctx) {
+	}
+
+	// Exit a parse tree produced by DocumentParser#mulDiv.
+	exitMulDiv(ctx) {
 	}
 
 

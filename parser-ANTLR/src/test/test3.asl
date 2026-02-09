@@ -1,7 +1,7 @@
 want = {
-    [draw 5-num; right; flip; draw 5-num];
+    [draw 5_num; right; flip; draw 5_num];
     arrow -. down;
-    [draw 5-claw; right; flip; draw 5-claw];
+    [draw 5_claw; right; flip; draw 5_claw];
 };
 
 want

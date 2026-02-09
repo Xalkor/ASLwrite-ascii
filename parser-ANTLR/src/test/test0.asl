@@ -1,3 +1,3 @@
-asl = 10-a 10-s 1-thumb;
+asl = 10_a 10_s 1_thumb;
 
 i study asl

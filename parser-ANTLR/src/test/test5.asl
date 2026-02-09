@@ -1,4 +1,4 @@
-5-num = {
+5_num = {
     size 2 3;
     stroke 0.1;
 
@@ -21,4 +21,4 @@
     goto 0.25 1;
 };
 
-5-num
+5_num

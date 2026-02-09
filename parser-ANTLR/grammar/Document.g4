@@ -20,15 +20,24 @@ grapheme: IDEN
 
 command_list: (command SEMICOLON)* command SEMICOLON? ;
 
-command: group
-       | IDEN arg*
+command: group                 # commandGroup
+       | iden_list ASSIGN expr # assignCommand
+       | IDEN arg*             # functionCommand
        ;
 
-arg: IDEN | NUM | arrow ;
+arg: expr | arrow ;
+
+expr: (PLUS | DASH) expr           # unarySign
+    | OPEN_PAREN expr CLOSE_PAREN  # parens
+    | expr op=(STAR | SLASH) expr  # mulDiv
+    | expr op=(PLUS | DASH)  expr  # addSub
+    | NUM                          # number
+    | IDEN                         # iden
+    ;
 
 group: OPEN_SQUARE command_list CLOSE_SQUARE ;
 
-arrow: PIPE? DASH arrow_head? ;
+arrow: PIPE? DASH arrow_head ;
 
 arrow_head: BANG | DOT+ | CLOSE_ANGLE DOT* ;
 
@@ -43,6 +52,8 @@ OPEN_CURLY   : '{';
 CLOSE_CURLY  : '}';
 OPEN_SQUARE  : '[';
 CLOSE_SQUARE : ']';
+OPEN_PAREN   : '(';
+CLOSE_PAREN  : ')';
 COMMA        : ',';      
 SEMICOLON    : ';';  
 PIPE         : '|';       
@@ -50,8 +61,11 @@ DASH         : '-';
 CLOSE_ANGLE  : '>';
 BANG         : '!';     
 DOT          : '.';  
+STAR         : '*';  
+SLASH        : '/';  
+PLUS         : '+';  
 
-NUM: '-'?[0-9]+'.'?[0-9]*;
-IDEN : [a-zA-Z0-9_^@~"-]*[a-zA-Z_^@~"][a-zA-Z0-9_^@~"-]*; // diacritic symbols, included as valid IDEN names
+NUM: [0-9]+'.'?[0-9]*;
+IDEN : [a-zA-Z0-9_^@~"]*[a-zA-Z_^@~"][a-zA-Z0-9_^@~"]*; // diacritic symbols, included as valid IDEN names
 
 WHITESPACE : [ \t\r\n]+ -> skip;

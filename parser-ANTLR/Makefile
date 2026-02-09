@@ -13,7 +13,7 @@ JAVA_OUT = java
 JS_OUT   = src/parser
 GRUN     = java org.antlr.v4.gui.TestRig
 
-TESTS = 0 1 2 3 4 5
+TESTS = 0 1 2 3 4 5 6
 
 .PHONY: all clean build bundle test java grun
 

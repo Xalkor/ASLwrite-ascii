@@ -1,14 +1,5 @@
 <svg width="20" height="30" viewBox="0 0 2 3" xmlns="http://www.w3.org/2000/svg">
 
-
-    <line x1="0.25" y1="0.25" x2="1" y2="2.75" stroke="black" stroke-width="0.1" />
-
-    <line x1="1" y1="2.75" x2="1.75" y2="0.25" stroke="black" stroke-width="0.1" />
-
-    <line x1="0.75" y1="0.25" x2="1" y2="1.5" stroke="black" stroke-width="0.1" />
-
-    <line x1="1" y1="1.5" x2="1.25" y2="0.25" stroke="black" stroke-width="0.1" />
-
-    <line x1="0.75" y1="2" x2="0.25" y2="2" stroke="black" stroke-width="0.1" />
+    <path d="M0.25 0.25L1 2.75L1.75 0.25M0.75 0.25L1 1.5L1.25 0.25M0.75 2L0.25 2" stroke="#000" stroke-width="0.1" fill="none" />
 
 </svg>

@@ -67,15 +67,41 @@ public interface DocumentListener extends ParseTreeListener {
 	 */
 	void exitCommand_list(DocumentParser.Command_listContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link DocumentParser#command}.
+	 * Enter a parse tree produced by the {@code commandGroup}
+	 * labeled alternative in {@link DocumentParser#command}.
 	 * @param ctx the parse tree
 	 */
-	void enterCommand(DocumentParser.CommandContext ctx);
+	void enterCommandGroup(DocumentParser.CommandGroupContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link DocumentParser#command}.
+	 * Exit a parse tree produced by the {@code commandGroup}
+	 * labeled alternative in {@link DocumentParser#command}.
 	 * @param ctx the parse tree
 	 */
-	void exitCommand(DocumentParser.CommandContext ctx);
+	void exitCommandGroup(DocumentParser.CommandGroupContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code assignCommand}
+	 * labeled alternative in {@link DocumentParser#command}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssignCommand(DocumentParser.AssignCommandContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code assignCommand}
+	 * labeled alternative in {@link DocumentParser#command}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssignCommand(DocumentParser.AssignCommandContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code functionCommand}
+	 * labeled alternative in {@link DocumentParser#command}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctionCommand(DocumentParser.FunctionCommandContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code functionCommand}
+	 * labeled alternative in {@link DocumentParser#command}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctionCommand(DocumentParser.FunctionCommandContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link DocumentParser#arg}.
 	 * @param ctx the parse tree
@@ -86,6 +112,78 @@ public interface DocumentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitArg(DocumentParser.ArgContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code unarySign}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterUnarySign(DocumentParser.UnarySignContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code unarySign}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitUnarySign(DocumentParser.UnarySignContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code number}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterNumber(DocumentParser.NumberContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code number}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitNumber(DocumentParser.NumberContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code parens}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterParens(DocumentParser.ParensContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code parens}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitParens(DocumentParser.ParensContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code iden}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterIden(DocumentParser.IdenContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code iden}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitIden(DocumentParser.IdenContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code addSub}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterAddSub(DocumentParser.AddSubContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code addSub}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitAddSub(DocumentParser.AddSubContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code mulDiv}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterMulDiv(DocumentParser.MulDivContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code mulDiv}
+	 * labeled alternative in {@link DocumentParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitMulDiv(DocumentParser.MulDivContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link DocumentParser#group}.
 	 * @param ctx the parse tree
