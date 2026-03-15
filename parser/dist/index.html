@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ASL-Write-ASCII</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @import url("https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code_vf.css");
+
+        svg {
+            border-width: 2px;
+            border-color: lightgrey;
+            border-style: dashed;
+        }
+        body {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 16px;
+        }
+        h1 { color: #c084fc; font-size: 1.4rem; letter-spacing: 0.1em; }
+        .subtitle { color: #6b7280; font-size: 0.85rem; margin-top: 4px; }
+        .pane {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+        .editor-side, .output-side {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+        label { color: #9ca3af; font-size: 0.8rem; letter-spacing: 0.05em; }
+        #editor {
+            flex: 1;
+            overflow: hidden;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            min-height: 0;
+        }
+
+        .cm-editor {
+            height: 100%;
+        }
+
+        .cm-editor.cm-focused {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        textarea:focus { border-color: #7c3aed; }
+        #output {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 12px;
+            overflow-y: auto;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+        .out-line { color: #033a26; }
+        .err-line { color: #911c1c; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 20px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+        }
+        button:hover { background: #6d28d9; }
+        button.secondary {
+            background: #1f2937;
+            border: 1px solid #374151;
+        }
+        button.secondary:hover { background: #374151; }
+        kbd {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>ASL-Write-ASCII</h1>
+        <div class="subtitle">A document preparation language for ASLWrite</div>
+    </div>
+
+    <div class="pane">
+        <div class="editor-side">
+            <label> SOURCE (<kbd>Ctrl</kbd>+<kbd>S</kbd> to run) </label>
+            <div id="editor"></div>
+        </div>
+        <div class="output-side">
+            <label>
+                OUTPUT
+                <span>[</span>
+                <label>
+                    <input type="radio" name="compiler-type" value="AST" checked>
+                    AST
+                </label>
+                <label>
+                    <input type="radio" name="compiler-type" value="SVG-text">
+                    SVG-text
+                </label>
+                <label>
+                    <input type="radio" name="compiler-type" value="SVG">
+                    SVG
+                </label>
+                <span>]</span>
+            </label>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="run-btn">▶ Run</button>
+        <button class="secondary" id="clear-btn">Clear output</button>
+    </div>
+
+    <script type="module" src="./asl_write_ascii.bundle.js"></script>
+        
+</body>
+</html>
