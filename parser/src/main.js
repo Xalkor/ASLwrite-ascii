@@ -144,6 +144,8 @@ study = {
   [turn -170; flip; draw num_5 85 85; draw ~ 85 85]
 }
 ---
+_big_v _small_v _thumb _big_u _dot _arrow_to_me ~
+num_1 num_5 claw_5 close_5
 I want study`;
 
 const editor = createEditor(
