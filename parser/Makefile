@@ -14,7 +14,7 @@ build:
 	$(PEG) $(GRAMMAR_FILE) -o $(OUTPUT_FILE) --format es
 
 bundle: build
-	$(BUNDLE) $(BUNDLE_MAIN) --bundle --outfile=$(BUNDLE_TARGET) --format=esm --platform=browser
+	$(BUNDLE) $(BUNDLE_MAIN) --bundle --outfile=$(BUNDLE_TARGET) --format=esm --platform=browser --loader:.asl=text
 
 host:
 	$(SERVE) dist

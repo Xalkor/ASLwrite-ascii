@@ -2,98 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ASL-Write-ASCII</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        @import url("https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code_vf.css");
-
-        svg {
-            border-width: 2px;
-            border-color: lightgrey;
-            border-style: dashed;
-        }
-        body {
-            font-family: 'Fira Code', 'Courier New', monospace;
-            background: #1a1a2e;
-            color: #e0e0e0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            gap: 16px;
-        }
-        h1 { color: #c084fc; font-size: 1.4rem; letter-spacing: 0.1em; }
-        .subtitle { color: #6b7280; font-size: 0.85rem; margin-top: 4px; }
-        .pane {
-            display: flex;
-            gap: 16px;
-            flex: 1;
-            min-height: 0;
-        }
-        .editor-side, .output-side {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1;
-        }
-        label { color: #9ca3af; font-size: 0.8rem; letter-spacing: 0.05em; }
-        #editor {
-            flex: 1;
-            overflow: hidden;
-            border: 1px solid #374151;
-            border-radius: 6px;
-            min-height: 0;
-        }
-
-        .cm-editor {
-            height: 100%;
-        }
-
-        .cm-editor.cm-focused {
-            outline: none;
-            border-color: #7c3aed;
-        }
-        textarea:focus { border-color: #7c3aed; }
-        #output {
-            flex: 1;
-            background: #ffffff;
-            border: 1px solid #374151;
-            border-radius: 6px;
-            padding: 12px;
-            overflow-y: auto;
-            line-height: 1.8;
-            font-size: 0.95rem;
-        }
-        .out-line { color: #033a26; }
-        .err-line { color: #911c1c; }
-        .controls { display: flex; gap: 10px; align-items: center; }
-        button {
-            background: #7c3aed;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 20px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            cursor: pointer;
-            letter-spacing: 0.05em;
-        }
-        button:hover { background: #6d28d9; }
-        button.secondary {
-            background: #1f2937;
-            border: 1px solid #374151;
-        }
-        button.secondary:hover { background: #374151; }
-        kbd {
-            color: #6b7280;
-            font-size: 0.75rem;
-        }
-    </style>
+    <title>ASLType</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div>
-        <h1>ASL-Write-ASCII</h1>
-        <div class="subtitle">A document preparation language for ASLWrite</div>
+        <h1>ASLType</h1>
+        <div class="subtitle">A document preparation language for ASLwrite</div>
     </div>
 
     <div class="pane">
@@ -102,33 +17,111 @@
             <div id="editor"></div>
         </div>
         <div class="output-side">
-            <label>
-                OUTPUT
-                <span>[</span>
-                <label>
-                    <input type="radio" name="compiler-type" value="AST">
-                    AST
+            <label>OUTPUT</label>
+            <iframe id="output" srcdoc=""></iframe>
+        </div>
+
+        <!-- Settings panel (hidden by default) -->
+        <div id="settings-panel" class="settings-panel" aria-hidden="true">
+            <div class="settings-header">Settings</div>
+
+            <div class="settings-section">
+                <div class="settings-label">Compiler mode</div>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="compiler-type" value="AST">
+                        <span class="radio-label">AST</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="compiler-type" value="Markdown">
+                        <span class="radio-label">Markdown</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="compiler-type" value="raw-HTML">
+                        <span class="radio-label">raw HTML</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="compiler-type" value="HTML" checked>
+                        <span class="radio-label">HTML</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-label">Glyph borders</div>
+                <label class="toggle-option">
+                    <input type="checkbox" id="show-borders" checked>
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="toggle-text">Show borders</span>
                 </label>
-                <label>
-                    <input type="radio" name="compiler-type" value="SVG-text">
-                    SVG-text
-                </label>
-                <label>
-                    <input type="radio" name="compiler-type" value="SVG" checked>
-                    SVG
-                </label>
-                <span>]</span>
-            </label>
-            <div id="output"></div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-label">Font size</div>
+                <div class="font-size-control">
+                    <button class="icon-btn" id="font-decrease" title="Decrease size">−</button>
+                    <span id="font-size-display">3rem</span>
+                    <button class="icon-btn" id="font-increase" title="Increase size">+</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="controls">
         <button id="run-btn">▶ Run</button>
         <button class="secondary" id="clear-btn">Clear output</button>
+        <button class="secondary icon-btn gear-btn" id="settings-btn" title="Settings" aria-expanded="false">⚙</button>
     </div>
 
     <script type="module" src="./asl_write_ascii.bundle.js"></script>
-        
+    <script>
+        // Settings panel toggle
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+
+        settingsBtn.addEventListener('click', () => {
+            const open = settingsPanel.classList.toggle('open');
+            settingsBtn.setAttribute('aria-expanded', open);
+            settingsPanel.setAttribute('aria-hidden', !open);
+        });
+
+        // Close panel on click outside
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
+                settingsPanel.classList.remove('open');
+                settingsBtn.setAttribute('aria-expanded', false);
+                settingsPanel.setAttribute('aria-hidden', true);
+            }
+        });
+
+        // Border toggle
+        const borderToggle = document.getElementById('show-borders');
+        borderToggle.addEventListener('change', () => {
+            document.getElementById('output').classList.toggle('hide-borders', !borderToggle.checked);
+        });
+
+        // Font size control
+        const sizes = ['1.5rem', '2rem', '2.5rem', '3rem', '4rem', '5rem', '6rem'];
+        let sizeIndex = 1; // default 3rem
+        const sizeDisplay = document.getElementById('font-size-display');
+
+        function applyFontSize() {
+            const size = sizes[sizeIndex];
+            sizeDisplay.textContent = size;
+            document.querySelectorAll('#output svg').forEach(svg => {
+                svg.style.width = size;
+                svg.style.height = size;
+            });
+            // store for future renders
+            document.getElementById('output').dataset.glyphSize = size;
+        }
+
+        document.getElementById('font-increase').addEventListener('click', () => {
+            if (sizeIndex < sizes.length - 1) { sizeIndex++; applyFontSize(); }
+        });
+        document.getElementById('font-decrease').addEventListener('click', () => {
+            if (sizeIndex > 0) { sizeIndex--; applyFontSize(); }
+        });
+    </script>
 </body>
 </html>

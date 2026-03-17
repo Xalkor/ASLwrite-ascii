@@ -15,8 +15,8 @@ function flattenMap(head, tail, fn) {
 Start = _ doc:Document _ { return doc; }
 
 Document
-    = defs:Definitions _ "---" _ body:Body     { return node("Document", { defs    , body }); }
-    / body:Body                                { return node("Document", { defs: [], body }); }
+    = defs:Definitions _ "===" _ body:Body { return node("Document", { defs    , body }); }
+    / body:Body                            { return node("Document", { defs: [], body }); }
 
 Definitions = head:Definition tail:(NEW_LINE+ Definition)* { return flatten(head, tail); }
 
@@ -55,7 +55,7 @@ Expr
   / "(" _ ce:ComplexExpr _ ")" { return ce; }
 
 ComplexExpr 
-    = head:Term tail:(SPACE? op:("+"/"-") SPACE? term:Term)*   { 
+    = head:Term tail:(SPACE? op:("+"/"-") SPACE? term:Term)* { 
        if(tail.length === 0) return head; // pass-through rule
        return node("Sum", { 
            vals: flattenMap(head, tail, t=>({op:t[1], val:t[3]})) 
@@ -76,24 +76,60 @@ Factor
     / Num                       
     / Iden
 
-Body = head:Line tail:(NEW_LINE Line)* { return node("Body", { rows: flatten(head, tail) }); }
+// --- Body ---
 
-Line 
-    = SPACE? row:Row { return row; }
-    / ""             { return null; }
+Body = segments:BodySegment* { return node("Body", { segments }) }
 
-Row = head:Iden tail:(SPACE Iden)* { return node("Row", { cols: flatten(head, tail) }); }
+BodySegment
+    = AslBlock
+    / AslInline
+    / MarkdownText
 
-Iden = name:IDEN { return node("Iden",   {name}) }
+AslInline
+    = "@" _ graphemes:Graphemes _ "@"
+      { return node("AslInline", { graphemes }) }
 
-Num = val:NUM { return node("Number", {val}) }
+AslBlock
+    = "@@@" _ rows:BlockRows _ "@@@"
+      { return node("AslBlock", { rows }) }
+
+BlockRows
+    = head:BlockRow tail:(BlockRowSep BlockRow)* { return flatten(head, tail) }
+
+BlockRowSep = SPACE? [\n\r] SPACE?
+
+BlockRow
+    = SPACE? head:Grapheme tail:(SPACE Grapheme)* SPACE? { return flatten(head, tail) }
+    / SPACE?                                             { return null }
+
+MarkdownText = chars:MarkdownChar+ { return node("MarkdownText", { text: chars.join('') }) }
+
+MarkdownChar
+    = FencedCode
+    / InlineCode
+    / DisplayMath
+    / InlineMath
+    / "\\\\"        { return "\\\\" } // \\ -> \
+    / "\\@"         { return "@" }    // \@ -> @
+    / !"@" char:.   { return char }
+
+FencedCode  = "```" text:$(!"```" .)* "```" { return "```"  + text + "```"  }
+InlineCode  = "`"   text:$(!"`"   .)* "`"   { return "`"    + text + "`"    }
+DisplayMath = "$$"  text:$(!"$$"  .)* "$$"  { return "$$"   + text + "$$"   }
+InlineMath  = "$"   text:$(!"$"   .)* "$"   { return "$"    + text + "$"    }
+
+// --- Terminals ---
+
+Iden = name:IDEN { return node("Iden", {name}) }
+Num  = val:NUM   { return node("Number", {val}) }
 
 IDEN = $([_a-zA-Z~][_a-zA-Z0-9~]*)
+NUM  = val:$([0-9]+("." [0-9]*)?) { return Number(val); }
 
-NUM = val:$([0-9]+("." [0-9]*)?) { return Number(val); }
-
-SPACE = " "+
+SPACE    = " "+
 NEW_LINE = [\n\r]+
-COMMENT = "#" [^\n\r]* NEW_LINE
+COMMENT
+    = "//" [^\n\r]* (NEW_LINE / !.)
+    / "/*" (!"*/" .)* "*/"
 
 _ = (SPACE / NEW_LINE / COMMENT)*

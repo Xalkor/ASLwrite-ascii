@@ -176,7 +176,7 @@ export class Turtle {
         this.transform.d = rot.d;
         this.transform.e = e;
         this.transform.f = f;
-        console.log(`face(${deg}) -> ${this.transform.toSVG()}`);
+        // console.log(`face(${deg}) -> ${this.transform.toSVG()}`);
     }
 
     toSVG() {
@@ -190,9 +190,7 @@ export class Turtle {
 
         const viewBox = `${-this.width/2} ${-this.height/2} ${this.width} ${this.height}`;
 
-        const fullHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="3rem" height="3rem" overflow="visible">
-        <g transform="scale(1,-1)">${innerPaths}</g>
-        </svg>`;
+        const fullHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="3rem" height="3rem" overflow="visible"><g transform="scale(1,-1)">${innerPaths}</g></svg>`;
 
         return { type: "Grapheme", turtle: this, fullHTML, innerPaths };
     }

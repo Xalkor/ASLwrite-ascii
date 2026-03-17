@@ -3,13 +3,15 @@ import { createEditor, getEditorContent, highlightError, clearErrors } from './t
 import { parse } from "./parser.js";
 import { Visitor } from "./visitor.js";
 
-const stdLib = `num_1 = {
-  # vertical line
+import initialSource from '../../README.asl?raw';
+
+const lib_handshapes = `num_1 = {
+  // vertical line
   goto 0 -100
   pendown
   face -90
   forward 200
-  # cross
+  // cross
   penup
   goto -40 -66
   pendown
@@ -37,33 +39,51 @@ _thumb = {
   face 180
   forward 40
 }
+_cross = {
+  penup
+  goto -45 -66
+  pendown
+  goto 55 -33
+}
+num_2 = {
+  draw _big_v
+  draw _cross
+}
+num_3 = {
+  draw _big_v
+  draw _thumb
+}
+num_4 = {
+  draw _big_v
+  draw _small_v
+  draw _cross
+}
 num_5 = {
   draw _big_v
   draw _small_v
   draw _thumb
 }
-
 claw_5 = {
-  # outer handshape
+  // outer handshape
   goto -66 100
   pendown
   goto 66 100
   goto 0 -100
   penup
-  # vertical line
+  // vertical line
   goto 0 -100
   pendown
   face -90
   forward 133
   turn -90
   forward 66
-  # thumb
+  // thumb
   penup
   goto 0 -33
   pendown
   face 180
   forward 33
-  # extra finger
+  // extra finger
   penup
   goto -66 66
   pendown
@@ -83,8 +103,9 @@ close_5 = {
   goto -30 0
   draw _thumb
 }
+`;
 
-_dot = {
+const lib_asl_vocab = `_dot = {
   penup
   goto -10 10
   pendown
@@ -104,18 +125,6 @@ _arrow_to_me = {
   forward 16
   draw _dot 16 16
 }
-~ = {
-  penup
-  goto -100 120
-  pendown
-  curveto -50 120 -90 140 -60 140
-  curveto   0 120 -40 140 -10 140
-  curveto  50 120  10 140  40 140
-  curveto 100 120  60 140  90 140
-}
-`;
-
-const initialSource = `
 I,me = {
   [turn 180; draw num_1]
   goto 30 10
@@ -143,10 +152,18 @@ study = {
   goto 50 50
   [turn -170; flip; draw num_5 85 85; draw ~ 85 85]
 }
----
-_big_v _small_v _thumb _big_u _dot _arrow_to_me ~
-num_1 num_5 claw_5 close_5
-I want study`;
+`;
+
+const lib_diacritics = `~,flutter = {
+  penup
+  goto -100 120
+  pendown
+  curveto -50 120 -90 140 -60 140
+  curveto   0 120 -40 140 -10 140
+  curveto  50 120  10 140  40 140
+  curveto 100 120  60 140  90 140
+}
+`;
 
 const editor = createEditor(
     document.getElementById('editor'),
@@ -206,7 +223,7 @@ function renderRow(out, row) {
 
 function renderGrid(out, svgGrid) {
     for (const row of svgGrid) {
-        console.log("[ROW]", row);
+        // console.log("[ROW]", row);
         const rowContainer = document.createElement('div');
         rowContainer.style.display = 'flex';
         rowContainer.style.flexWrap = 'wrap';
@@ -218,8 +235,14 @@ function renderGrid(out, svgGrid) {
     }
 }
 
+function escapeHTML(str) {
+  var p = document.createElement("p"); // or 'div', 'textarea', etc.
+  p.textContent = str; 
+  return p.innerHTML;
+}
+
 function execute() {
-    const source = stdLib+getEditorContent(editor);
+    const source = lib_handshapes+lib_diacritics+lib_asl_vocab+getEditorContent(editor);
     const out = document.getElementById('output');
     out.innerHTML = '';
 
@@ -233,20 +256,40 @@ function execute() {
     
     try {
         const ast = parse(source);
-        console.log("AST:", JSON.stringify(ast, null, 2));
+        // console.log("AST:", JSON.stringify(ast, null, 2));
 
         switch(chosenFormat) {
             case "AST":
-                const lines = JSON.stringify(ast, null, 2).split('\n');
-                writeLines(out, lines);
+                const lines = JSON.stringify(ast, null, 2);
+                out.srcdoc = `<!DOCTYPE html><html><body><pre>${lines}</pre></body></html>`;
                 break;
-            case "SVG-text":
-                const result = visitor.visit(ast)
-                writeLines(out, result);
+            case "raw-HTML":
+                out.srcdoc = `<!DOCTYPE html><html><body><pre>${escapeHTML(visitor.visit(ast))}</pre></body></html>`;
                 break;
-            case "SVG":
-                const svgGrid = visitor.visit(ast);
-                renderGrid(out, svgGrid);
+            case "Markdown":
+                out.srcdoc = `<!DOCTYPE html><html><body><pre>${escapeHTML(visitor.visitDocumentRaw(ast))}</pre></body></html>`;
+                break;
+            case "HTML":
+                const prevScroll = out.contentDocument?.documentElement?.scrollTop ?? 0;
+                const html = visitor.visit(ast);
+                const showBorders = document.getElementById('show-borders').checked;
+                const borderStyle = showBorders 
+                    ? `svg { border: 2px dashed lightgrey; }`
+                    : `svg { border: none; }`;
+                const glyphSize = sizes[sizeIndex];
+                out.srcdoc = `<!DOCTYPE html><html><head>
+                <base target="_blank">
+                <style>
+                    body { font-family: serif; padding: 12px; line-height: 1.6; margin: 0; box-sizing: border-box; overflow-wrap: break-word; }
+                    svg { display: inline-block; vertical-align: baseline; width: ${glyphSize}; height: ${glyphSize}; padding: 2px 2px 4px 2px; }
+                    div[style*="display:flex"] { gap: 4px; }
+                    div { max-width: 100%; }
+                    pre { white-space: pre-wrap; overflow-wrap: break-word; max-width: 100%; }
+                    ${borderStyle}
+                </style></head><body>${html}</body></html>`;
+                out.addEventListener('load', () => {
+                    out.contentDocument.documentElement.scrollTop = prevScroll;
+                }, { once: true });
                 break;
             default:
                 throw new Error(`no compiler type selected chosenFormat=${chosenFormat}`);
@@ -255,21 +298,13 @@ function execute() {
         
     } catch(e) {
         const out = document.getElementById('output');
-
         if (e.location) {
             const { start, end } = e.location;
             const msg = `Error at line ${start.line}, column ${start.column}: ${e.message}`;
-            const pre = document.createElement('div');
-            pre.className = 'err-line';
-            pre.textContent = msg;
-            out.appendChild(pre);
-
+            out.srcdoc = `<!DOCTYPE html><html><body><div style="color:#911c1c;font-family:monospace;padding:12px;">${msg}</div></body></html>`;
             highlightError(editor, start, end);
         } else {
-            const pre = document.createElement('div');
-            pre.className = 'err-line';
-            pre.textContent = e.message;
-            out.appendChild(pre);
+            out.srcdoc = `<!DOCTYPE html><html><body><div style="color:#911c1c;font-family:monospace;padding:12px;">${e.message}</div></body></html>`;
         }
     }
 }
@@ -280,6 +315,15 @@ document.getElementById('editor').addEventListener('keydown', e => {
         execute();
         e.preventDefault();
     }
+});
+
+document.getElementById('show-borders').addEventListener('change', execute);
+
+document.getElementById('font-increase').addEventListener('click', () => {
+    if (sizeIndex < sizes.length - 1) { sizeIndex++; sizeDisplay.textContent = sizes[sizeIndex]; execute(); }
+});
+document.getElementById('font-decrease').addEventListener('click', () => {
+    if (sizeIndex > 0) { sizeIndex--; sizeDisplay.textContent = sizes[sizeIndex]; execute(); }
 });
 
 document.getElementById('run-btn').addEventListener('click', execute);
