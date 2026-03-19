@@ -79,7 +79,7 @@ class SVGPath {
 
 
 export class Turtle {
-    constructor() {
+    constructor(debug=false) {
         this.transform = new Mat2D();
         this._stack = [];
         this.width = 200;
@@ -88,6 +88,9 @@ export class Turtle {
         this.isPenDown = false;
         this.paths = [];
         this.currentPath = new SVGPath(new SVGSeg("M", 0, 0));
+
+        this.debug = debug;
+        this.debugControlPoints = debug ? [] : null;
     }
 
     push() {
@@ -157,6 +160,9 @@ export class Turtle {
         if (this.isPenDown) {
             this.currentPath.push(new SVGSeg("C", c1x, c1y, c2x, c2y, x, y));
         }
+        if (this.debug) {
+            this.debugControlPoints.push({ x, y, c1x, c1y, c2x, c2y, fromX: this.transform.e, fromY: this.transform.f });
+        }
         this.transform.e = x;
         this.transform.f = y;
     }
@@ -188,11 +194,46 @@ export class Turtle {
         const pathElems = this.paths.map(d => d.toPathString(this));
         const innerPaths = pathElems.join('');
 
+        let debugElems = '';
+        if (this.debug) {
+            const x = this.transform.e;
+            const y = this.transform.f;
+            const dx = this.transform.a * 40;
+            const dy = this.transform.b * 40;
+            debugElems = (
+                `<circle cx="${x}" cy="${y}" r="4" fill="red" opacity="0.7"/>` +
+                `<line x1="${x}" y1="${y}" x2="${x + dx}" y2="${y + dy}"`      +
+                    ` stroke="red" stroke-width="4" opacity="0.6"`             +
+                    ` marker-end="url(#debug-arrow)"/>`
+            );
+            for (const cp of this.debugControlPoints) {
+                // console.log('[CONTROL POINT]', cp);
+                debugElems += (
+                    `<circle cx="${cp.c1x}" cy="${cp.c1y}" r="4" fill="blue" opacity="0.6"/>`   +
+                    `<circle cx="${cp.c2x}" cy="${cp.c2y}" r="4" fill="green" opacity="0.6"/>`  +
+                    `<line x1="${cp.fromX}" y1="${cp.fromY}" x2="${cp.c1x}" y2="${cp.c1y}"` +
+                        ` stroke="blue" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>`    +
+                    `<line x1="${cp.x}" y1="${cp.y}" x2="${cp.c2x}" y2="${cp.c2y}"`         +
+                        ` stroke="green" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>`
+                );
+            }
+            // console.log('[DEBUG ELEMENTS]', debugElems);
+        }
+
         const viewBox = `${-this.width/2} ${-this.height/2} ${this.width} ${this.height}`;
+        const fullHTML = 
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="3rem" height="3rem" overflow="visible">` +
+            `<defs>`                                                                                                  +
+                `<marker id="debug-arrow" viewBox="0 0 10 10" refX="8" refY="5"`                                      +
+                        `markerWidth="4" markerHeight="4" orient="auto-start-reverse">`                               +
+                    `<path d="M2 1L8 5L2 9" fill="none" stroke="red" stroke-width="2"/>`                              +
+                `</marker>`                                                                                           +
+            `</defs>`                                                                                                 +
+            `<g transform="scale(1,-1)">${innerPaths}${debugElems}</g>`                                               +
+        `</svg>`;
 
-        const fullHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="3rem" height="3rem" overflow="visible"><g transform="scale(1,-1)">${innerPaths}</g></svg>`;
-
-        return { type: "Grapheme", turtle: this, fullHTML, innerPaths };
+        // console.log('[FULL HTML]', fullHTML)
+        return { type: "Grapheme", turtle: this, fullHTML, innerPaths:innerPaths+debugElems };
     }
 
     runCommand(name, args) {

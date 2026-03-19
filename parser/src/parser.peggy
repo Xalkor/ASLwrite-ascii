@@ -15,10 +15,14 @@ function flattenMap(head, tail, fn) {
 Start = _ doc:Document _ { return doc; }
 
 Document
-    = defs:Definitions _ "===" _ body:Body { return node("Document", { defs    , body }); }
-    / body:Body                            { return node("Document", { defs: [], body }); }
+    = statements:Statements _ "===" _ body:Body { return node("Document", { statements    , body }); }
+    / body:Body                                 { return node("Document", { statements: [], body }); }
 
-Definitions = head:Definition tail:(NEW_LINE+ Definition)* { return flatten(head, tail); }
+Statements = head:Statement tail:(NEW_LINE+ Statement)* { return flatten(head, tail); }
+
+Statement = Import / Definition
+
+Import = "import" SPACE path:PATH { return node("Import", { path: path.trim() }) }
 
 Definition 
     = idens:IdenList _ "=" _ graphemes:Graphemes _ ";" { return node("Definition", { idens, graphemes            }); }
@@ -119,6 +123,8 @@ DisplayMath = "$$"  text:$(!"$$"  .)* "$$"  { return "$$"   + text + "$$"   }
 InlineMath  = "$"   text:$(!"$"   .)* "$"   { return "$"    + text + "$"    }
 
 // --- Terminals ---
+
+PATH = $([^\n\r=][^\n\r]*)
 
 Iden = name:IDEN { return node("Iden", {name}) }
 Num  = val:NUM   { return node("Number", {val}) }

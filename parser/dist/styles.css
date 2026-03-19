@@ -186,10 +186,16 @@ textarea:focus { border-color: #7c3aed; }
 .toggle-text { color: #d1d5db; }
 
 /* Font size control */
-.font-size-control {
+.size-control {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+#svg-size-display {
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    min-width: 44px;
+    text-align: center;
 }
 #font-size-display {
     color: #e0e0e0;
@@ -243,4 +249,34 @@ button.secondary:hover { background: #374151; }
 kbd {
     color: #6b7280;
     font-size: 0.75rem;
+}
+
+/* --- editor tabs --- */
+.editor-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+}
+
+.tab-bar {
+    flex-shrink: 0;
+}
+.tab {
+    background: #1f2937;
+    color: #9ca3af;
+    border: 1px solid #374151;
+    border-radius: 5px 5px 0 0;
+    padding: 5px 14px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+}
+.tab:hover { background: #374151; }
+.tab.active {
+    background: #7c3aed;
+    color: white;
+    border-color: #7c3aed;
 }

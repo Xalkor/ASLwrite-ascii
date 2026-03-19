@@ -13,7 +13,13 @@
 
     <div class="pane">
         <div class="editor-side">
-            <label> SOURCE (<kbd>Ctrl</kbd>+<kbd>S</kbd> to run) </label>
+            <div class="tab-bar">
+                <button class="tab active" data-tab="readme">README</button>
+                <button class="tab" data-tab="vocab">vocab</button>
+                <button class="tab" data-tab="handshapes">handshapes</button>
+                <button class="tab" data-tab="diacritics">diacritics</button>
+                <button class="tab" data-tab="scratch">scratch</button>
+            </div>
             <div id="editor"></div>
         </div>
         <div class="output-side">
@@ -26,7 +32,7 @@
             <div class="settings-header">Settings</div>
 
             <div class="settings-section">
-                <div class="settings-label">Compiler mode</div>
+                <div class="settings-label">Compiler type</div>
                 <div class="radio-group">
                     <label class="radio-option">
                         <input type="radio" name="compiler-type" value="AST">
@@ -44,11 +50,15 @@
                         <input type="radio" name="compiler-type" value="HTML" checked>
                         <span class="radio-label">HTML</span>
                     </label>
+                    <label class="radio-option">
+                        <input type="radio" name="compiler-type" value="debug">
+                        <span class="radio-label">debug HTML</span>
+                    </label>
                 </div>
             </div>
 
             <div class="settings-section">
-                <div class="settings-label">Glyph borders</div>
+                <div class="settings-label">ASL Glyph borders</div>
                 <label class="toggle-option">
                     <input type="checkbox" id="show-borders" checked>
                     <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -57,10 +67,18 @@
             </div>
 
             <div class="settings-section">
+                <div class="settings-label">ASL Glyph size</div>
+                <div class="size-control">
+                    <button class="icon-btn" id="svg-decrease" title="Decrease size">-</button>
+                    <span id="svg-size-display">2rem</span>
+                    <button class="icon-btn" id="svg-increase" title="Increase size">+</button>
+                </div>
+            </div>
+            <div class="settings-section">
                 <div class="settings-label">Font size</div>
-                <div class="font-size-control">
-                    <button class="icon-btn" id="font-decrease" title="Decrease size">−</button>
-                    <span id="font-size-display">3rem</span>
+                <div class="size-control">
+                    <button class="icon-btn" id="font-decrease" title="Decrease size">-</button>
+                    <span id="font-size-display">2rem</span>
                     <button class="icon-btn" id="font-increase" title="Increase size">+</button>
                 </div>
             </div>
@@ -101,27 +119,13 @@
         });
 
         // Font size control
-        const sizes = ['1.5rem', '2rem', '2.5rem', '3rem', '4rem', '5rem', '6rem'];
-        let sizeIndex = 1; // default 3rem
-        const sizeDisplay = document.getElementById('font-size-display');
-
-        function applyFontSize() {
-            const size = sizes[sizeIndex];
-            sizeDisplay.textContent = size;
-            document.querySelectorAll('#output svg').forEach(svg => {
-                svg.style.width = size;
-                svg.style.height = size;
-            });
-            // store for future renders
-            document.getElementById('output').dataset.glyphSize = size;
-        }
-
-        document.getElementById('font-increase').addEventListener('click', () => {
-            if (sizeIndex < sizes.length - 1) { sizeIndex++; applyFontSize(); }
-        });
-        document.getElementById('font-decrease').addEventListener('click', () => {
-            if (sizeIndex > 0) { sizeIndex--; applyFontSize(); }
-        });
+        const sizes = ['0.8em', '1em', '1.2em', '1.5em', '2em', '2.5em', '3em', '4em', '5em', '6em', '7em', '8em', '9em', '10em', '11em', '12em'];
+        let svgSizeIndex  = 1; // default 3rem
+        let fontSizeIndex = 1; // default 3rem
+        const svgSizeDisplay  = document.getElementById('svg-size-display');
+        const fontSizeDisplay = document.getElementById('font-size-display');
+        svgSizeDisplay.textContent  = sizes[svgSizeIndex];
+        fontSizeDisplay.textContent = sizes[fontSizeIndex];
     </script>
 </body>
 </html>

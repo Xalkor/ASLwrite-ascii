@@ -3,167 +3,43 @@ import { createEditor, getEditorContent, highlightError, clearErrors } from './t
 import { parse } from "./parser.js";
 import { Visitor } from "./visitor.js";
 
-import initialSource from '../../README.asl?raw';
+import initialSource    from '../../README.asl';
+import vocabSource      from '../dist/libs/vocab.asl';
+import handshapesSource from '../dist/libs/handshapes.asl';
+import diacriticsSource from '../dist/libs/diacritics.asl';
 
-const lib_handshapes = `num_1 = {
-  // vertical line
-  goto 0 -100
-  pendown
-  face -90
-  forward 200
-  // cross
-  penup
-  goto -40 -66
-  pendown
-  goto 40 -33
+const tabContents = {
+    readme:     initialSource,
+    vocab:      vocabSource,
+    diacritics: diacriticsSource,
+    handshapes: handshapesSource,
+    scratch:    'import vocab\n===\n# Example document\n\nTry playing around!'
+};
+
+let activeTab = 'readme';
+
+function switchTab(tabName) {
+    tabContents[activeTab] = getEditorContent(editor);
+    activeTab = tabName;
+
+    editor.dispatch({
+        changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: tabContents[activeTab]
+        }
+    });
+
+    document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tabName);
+    });
+
+    execute();
 }
 
-_big_v = {
-  penup
-  goto -66 100
-  pendown
-  goto 0 -100
-  goto 66 100
-}
-_small_v = {
-  penup
-  goto -33 100
-  pendown
-  goto 0 0
-  goto 33 100
-}
-_thumb = {
-  penup
-  goto -15 -50
-  pendown
-  face 180
-  forward 40
-}
-_cross = {
-  penup
-  goto -45 -66
-  pendown
-  goto 55 -33
-}
-num_2 = {
-  draw _big_v
-  draw _cross
-}
-num_3 = {
-  draw _big_v
-  draw _thumb
-}
-num_4 = {
-  draw _big_v
-  draw _small_v
-  draw _cross
-}
-num_5 = {
-  draw _big_v
-  draw _small_v
-  draw _thumb
-}
-claw_5 = {
-  // outer handshape
-  goto -66 100
-  pendown
-  goto 66 100
-  goto 0 -100
-  penup
-  // vertical line
-  goto 0 -100
-  pendown
-  face -90
-  forward 133
-  turn -90
-  forward 66
-  // thumb
-  penup
-  goto 0 -33
-  pendown
-  face 180
-  forward 33
-  // extra finger
-  penup
-  goto -66 66
-  pendown
-  face 0
-  forward 66
-}
-_big_u = {
-  goto -50 100
-  pendown
-  curveto  0 -100 -50   20 -60 -100
-  curveto 50  100  60 -100  50   20 
-}
-close_5 = {
-  draw _big_u
-
-  penup
-  goto -30 0
-  draw _thumb
-}
-`;
-
-const lib_asl_vocab = `_dot = {
-  penup
-  goto -10 10
-  pendown
-  forward 20
-  turn 90
-  forward 20
-  turn 90
-  forward 20
-  turn 90
-  forward 20
-}
-_arrow_to_me = {
-  pendown
-  face 90
-  forward 75
-  penup
-  forward 16
-  draw _dot 16 16
-}
-I,me = {
-  [turn 180; draw num_1]
-  goto 30 10
-  draw _arrow_to_me
-}
-want = {
-  goto -50 +50
-  draw num_5 85 85
-  
-  goto +50 +50
-  [flip; draw num_5 85 85]
-  
-  goto -50 -50
-  [flip; draw claw_5 85 85]
-  
-  goto +50 -50
-  draw claw_5 85 85
-  
-  goto 0 50
-  draw _arrow_to_me
-}
-study = {
-  goto -50 -50
-  [turn 75; draw close_5 85 85]
-  goto 50 50
-  [turn -170; flip; draw num_5 85 85; draw ~ 85 85]
-}
-`;
-
-const lib_diacritics = `~,flutter = {
-  penup
-  goto -100 120
-  pendown
-  curveto -50 120 -90 140 -60 140
-  curveto   0 120 -40 140 -10 140
-  curveto  50 120  10 140  40 140
-  curveto 100 120  60 140  90 140
-}
-`;
+document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+});
 
 const editor = createEditor(
     document.getElementById('editor'),
@@ -236,13 +112,35 @@ function renderGrid(out, svgGrid) {
 }
 
 function escapeHTML(str) {
-  var p = document.createElement("p"); // or 'div', 'textarea', etc.
+  var p = document.createElement("p");
   p.textContent = str; 
   return p.innerHTML;
 }
 
-function execute() {
-    const source = lib_handshapes+lib_diacritics+lib_asl_vocab+getEditorContent(editor);
+// visit all imported files
+export async function resolveImports(ast) {
+    const resolvedStatements = [];
+    for (const stmt of ast.statements) {
+        if (stmt.type === 'Import') {
+            const source = await fetch('libs/' + stmt.path + '.asl').then(r => {
+                if (!r.ok) throw new Error(`Could not import "${stmt.path}.asl": ${r.status} ${r.statusText}`);
+                return r.text();
+            });
+            const importedAst = parse(source);
+            // recursively resolve imports in the imported file
+            await resolveImports(importedAst);
+            // only inject definitions, ignore body
+            resolvedStatements.push(...importedAst.statements.filter(s => s.type === 'Definition'));
+        } else {
+            resolvedStatements.push(stmt);
+        }
+    }
+    ast.statements = resolvedStatements;
+}
+
+async function execute() {
+    //const source = lib_handshapes+lib_diacritics+lib_asl_vocab+getEditorContent(editor);
+    const source = getEditorContent(editor);
     const out = document.getElementById('output');
     out.innerHTML = '';
 
@@ -257,30 +155,35 @@ function execute() {
     try {
         const ast = parse(source);
         // console.log("AST:", JSON.stringify(ast, null, 2));
-
         switch(chosenFormat) {
             case "AST":
                 const lines = JSON.stringify(ast, null, 2);
                 out.srcdoc = `<!DOCTYPE html><html><body><pre>${lines}</pre></body></html>`;
                 break;
             case "raw-HTML":
+                await resolveImports(ast);
                 out.srcdoc = `<!DOCTYPE html><html><body><pre>${escapeHTML(visitor.visit(ast))}</pre></body></html>`;
                 break;
             case "Markdown":
+                await resolveImports(ast);
                 out.srcdoc = `<!DOCTYPE html><html><body><pre>${escapeHTML(visitor.visitDocumentRaw(ast))}</pre></body></html>`;
                 break;
+            case "debug":
+                visitor.debug = true;
             case "HTML":
+                await resolveImports(ast);
                 const prevScroll = out.contentDocument?.documentElement?.scrollTop ?? 0;
                 const html = visitor.visit(ast);
                 const showBorders = document.getElementById('show-borders').checked;
                 const borderStyle = showBorders 
                     ? `svg { border: 2px dashed lightgrey; }`
                     : `svg { border: none; }`;
-                const glyphSize = sizes[sizeIndex];
+                const glyphSize = sizes[svgSizeIndex];
+                const fontSize = sizes[fontSizeIndex];
                 out.srcdoc = `<!DOCTYPE html><html><head>
                 <base target="_blank">
                 <style>
-                    body { font-family: serif; padding: 12px; line-height: 1.6; margin: 0; box-sizing: border-box; overflow-wrap: break-word; }
+                    body { font-family: serif; font-size: ${fontSize}; padding: 12px; line-height: 1.6; margin: 0; box-sizing: border-box; overflow-wrap: break-word; }
                     svg { display: inline-block; vertical-align: baseline; width: ${glyphSize}; height: ${glyphSize}; padding: 2px 2px 4px 2px; }
                     div[style*="display:flex"] { gap: 4px; }
                     div { max-width: 100%; }
@@ -319,11 +222,18 @@ document.getElementById('editor').addEventListener('keydown', e => {
 
 document.getElementById('show-borders').addEventListener('change', execute);
 
+document.getElementById('svg-increase').addEventListener('click', () => {
+    if (svgSizeIndex < sizes.length - 1) { svgSizeIndex++; svgSizeDisplay.textContent = sizes[svgSizeIndex]; execute(); }
+});
+document.getElementById('svg-decrease').addEventListener('click', () => {
+    if (svgSizeIndex > 0) { svgSizeIndex--; svgSizeDisplay.textContent = sizes[svgSizeIndex]; execute(); }
+});
+
 document.getElementById('font-increase').addEventListener('click', () => {
-    if (sizeIndex < sizes.length - 1) { sizeIndex++; sizeDisplay.textContent = sizes[sizeIndex]; execute(); }
+    if (fontSizeIndex < sizes.length - 1) { fontSizeIndex++; fontSizeDisplay.textContent = sizes[fontSizeIndex]; execute(); }
 });
 document.getElementById('font-decrease').addEventListener('click', () => {
-    if (sizeIndex > 0) { sizeIndex--; sizeDisplay.textContent = sizes[sizeIndex]; execute(); }
+    if (fontSizeIndex > 0) { fontSizeIndex--; fontSizeDisplay.textContent = sizes[fontSizeIndex]; execute(); }
 });
 
 document.getElementById('run-btn').addEventListener('click', execute);

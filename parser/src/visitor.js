@@ -2,12 +2,14 @@ import { Env } from './env.js';
 import { Turtle } from './turtle.js';
 import { marked } from 'marked';
 import markedFootnote from 'marked-footnote';
+
 marked.use(markedFootnote());
 
 export class Visitor {
     constructor() {
         this.env = new Env();
         this.turtle = null;
+        this.debug = false;
     }
 
     visit(node) {
@@ -42,18 +44,22 @@ export class Visitor {
         return withPlaceholders.replace(placeholder, match => inlineMap[match] || match);
     }
 
+    // Document
+    //     = statements:Statements _ "===" _ body:Body { return node("Document", { statements    , body }); }
+    //     / body:Body                                 { return node("Document", { statements: [], body }); }
+    visitDocument(node) {
+        node.statements.forEach( s => this.visit(s) );
+        return this.visit(node.body);
+    }
+
     visitDocumentRaw(node) {
-        node.defs.forEach(def => this.visit(def));
+        node.statements.forEach( s => this.visit(s) );
         return this.visitBodyRaw(node.body);
     }
 
-    // Document
-    //     = defs:Definitions _ "---" _ body:Body     { return node("Document", { defs    , body }); }
-    //     / body:Body                                { return node("Document", { defs: [], body }); }                      
-    visitDocument(node) {
-        // console.log('visit Document :', node);
-        node.defs.forEach( def => this.visit(def) );
-        return this.visit(node.body);
+    // should be delt with by the import resolver
+    visitImport(node) {
+        throw new Error("Import resovler failed, Import node left in AST");
     }
 
     // Definition 
@@ -73,7 +79,7 @@ export class Visitor {
 
     // Block = "{" _ comms:Commands _ "}" { return node("Block", {comms} ); }
     visitBlock(node) {
-        const turtle = new Turtle();
+        const turtle = new Turtle(this.debug);
         this.turtle = turtle;
 
         node.comms.forEach(c => this.visit(c));
@@ -144,7 +150,13 @@ export class Visitor {
     // helper for visiting a grapheme that might be a single grapheme or a list
     visitGrapheme(node) {
         const result = this.visit(node);
-        if (result?.type === "Graphemes") return result.val;
+        return this.flattenGraphemes(result);
+    }
+
+    flattenGraphemes(result) {
+        if (result?.type === "Graphemes") {
+            return result.val.flatMap(v => this.flattenGraphemes(v));
+        }
         return [result];
     }
 

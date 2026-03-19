@@ -33,6 +33,14 @@ const aslWriteStream = StreamLanguage.define({
             if (stream.match('===')) { state.mode = 'markdown'; return 'separator'; }
             if (stream.match(/\d+/)) return 'number';
             if (stream.match(/\b(penup|pendown|forward|turn|goto|size|face|draw|flip|curveto)\b/)) return 'keyword';
+                if (stream.match(/import\b/)) {
+                // check if it's a definition or an import
+                const rest = stream.string.slice(stream.pos).trimStart();
+                if (rest.startsWith('=')) {
+                    return 'variableName';
+                }
+                return 'keyword';
+            }
             if (stream.match(/~?[a-zA-Z_][a-zA-Z0-9_~]*/)) return 'variableName';
             if (stream.match(/~/)) return 'typeName';
             if (stream.match(/==|!=|<=|>=/)) return 'operator';
