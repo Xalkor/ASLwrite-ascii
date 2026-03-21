@@ -103,6 +103,40 @@ export class Visitor {
         this.turtle.runCommand(node.name, args);
     }
 
+    // return node("Prod", { head, tail:tail.map( t => {op:t[1], val:t[3]}) }); 
+    visitProd(node) {
+        //console.log('[PROD]', node);
+        const head = this.visit(node.head);
+        return { 
+            type: 'Number', 
+            val : node.tail.reduce( (acc, t) => {
+                const factor = this.visit(t.val);
+                //console.log('[PROD REDUCE]', acc, t, factor);
+                if(t.op == '*')
+                    return acc * factor.val
+                else
+                    return acc / factor.val
+            }, head.val ) 
+        };
+    }
+
+    // return node("Sum", { head, tail:tail.map( t => {op:t[1], val:t[3]}) }); 
+    visitSum(node) {
+        //console.log('[SUM]', node);
+        const head = this.visit(node.head);
+        return { 
+            type: 'Number', 
+            val : node.tail.reduce( (acc, t) => {
+                const factor = this.visit(t.val);
+                //console.log('[SUM REDUCE]', acc, t, factor);
+                if(t.op == '+')
+                    return acc + factor.val
+                else
+                    return acc - factor.val
+            }, head.val ) 
+        };
+    }
+
     // op:("+"/"-") child:Expr { return node("UnaryOp", {op, child}); }
     visitUnaryOp(node) {
         switch(node.op){

@@ -28,7 +28,7 @@ const aslWriteStream = StreamLanguage.define({
         }
 
         // ── ASL mode (definitions section) ───────────────────────────────
-        if (state.mode === 'asl') {
+        if (state.mode === 'asl' || state.mode === 'calc') {
             if (stream.match('//')) { stream.skipToEnd(); return 'comment'; }
             if (stream.match('===')) { state.mode = 'markdown'; return 'separator'; }
             if (stream.match(/\d+/)) return 'number';
@@ -45,6 +45,24 @@ const aslWriteStream = StreamLanguage.define({
             if (stream.match(/~/)) return 'typeName';
             if (stream.match(/==|!=|<=|>=/)) return 'operator';
             if (stream.match(/[+\/\-*<>]/)) return 'operator';
+            if (stream.match(/\#\(/)) {
+                state.prevMode = state.mode;
+                state._brackets = 1;
+                state.mode = 'calc';
+                return 'paren';
+            }
+            if (state.mode === 'calc' && stream.match(/\(/)) {
+                state._brackets++;
+                return null;
+            }
+            if (state.mode === 'calc' && stream.match(/\)/)) {
+                state._brackets--;
+                if(state._brackets <= 0) {
+                    state.mode = state.prevMode;
+                    return 'paren';
+                }
+                return null;
+            }
             stream.next();
             return null;
         }
@@ -190,6 +208,7 @@ const aslWriteHighlight = HighlightStyle.define([
     { tag: tags.keyword,      color: '#b36aa8', fontWeight: 'bold' },
     { tag: tags.typeName,     color: '#c25671' },
     { tag: tags.operator,     color: '#C89B7B' },
+    { tag: tags.paren,        color: '#c8c57b', fontWeight: 'bold' },
     { tag: tags.variableName, color: '#7584c3' },
     { tag: tags.separator,    color: '#95AF6E', fontWeight: 'bold' },
     { tag: tags.heading1,     color: '#af91cd', fontWeight: 'bold' },

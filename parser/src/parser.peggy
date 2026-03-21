@@ -14,9 +14,7 @@ function flattenMap(head, tail, fn) {
 
 Start = _ doc:Document _ { return doc; }
 
-Document
-    = statements:Statements _ "===" _ body:Body { return node("Document", { statements    , body }); }
-    / body:Body                                 { return node("Document", { statements: [], body }); }
+Document = statements:Statements _ "===" _ body:Body { return node("Document", { statements, body }); }
 
 Statements = head:Statement tail:(NEW_LINE+ Statement)* { return flatten(head, tail); }
 
@@ -55,30 +53,32 @@ ArgList
 Arg = Expr
 
 Expr
-  = Factor
-  / "(" _ ce:ComplexExpr _ ")" { return ce; }
+  = TerminalExpr
+  / "#(" _ ce:ComplexExpr _ ")" { return ce; }
 
 ComplexExpr 
-    = head:Term tail:(SPACE? op:("+"/"-") SPACE? term:Term)* { 
+    = head:Term tail:(_ op:("+"/"-") _ term:Term)* { 
        if(tail.length === 0) return head; // pass-through rule
-       return node("Sum", { 
-           vals: flattenMap(head, tail, t=>({op:t[1], val:t[3]})) 
-       }); 
+       return node("Sum", { head, tail:tail.map( t => ({op:t[1], val:t[3]}) ) }); 
     }
 
 Term 
-    = head:Factor tail:(SPACE? op:("*"/"/") SPACE? fact:Factor)* { 
+    = head:Factor tail:(_ op:("*"/"/") _ fact:Factor)* { 
         if(tail.length === 0) return head; // pass-through rule
-        return node("Prod", { 
-            vals: flattenMap(head, tail, t=>({op:t[1], val:t[3]})) 
-        }); 
+        return node("Prod", { head, tail:tail.map( t => ({op:t[1], val:t[3]}) ) }); 
     }
 
 Factor 
-    = op:("+"/"-") !SPACE child:Factor { return node("UnaryOp", {op, child}); }
-    / "(" SPACE expr:Expr SPACE ")"    { return expr; }
+    = TerminalExpr
+    / "(" _ expr:Factor _ ")"    { return expr; }
+    / "(" _ expr:ComplexExpr _ ")"    { return expr; }
     / Num                       
     / Iden
+
+TerminalExpr
+    = op:("+"/"-") !SPACE child:Factor { return node("UnaryOp", {op, child}); }
+    / Num
+    / Iden 
 
 // --- Body ---
 
@@ -113,8 +113,8 @@ MarkdownChar
     / InlineCode
     / DisplayMath
     / InlineMath
-    / "\\\\"        { return "\\\\" } // \\ -> \
-    / "\\@"         { return "@" }    // \@ -> @
+    / "\\\\"        { return "\\\\" }  // \\ -> \
+    / "\\@"         { return "@" }     // \@ -> @
     / !"@" char:.   { return char }
 
 FencedCode  = "```" text:$(!"```" .)* "```" { return "```"  + text + "```"  }
