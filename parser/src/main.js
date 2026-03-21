@@ -187,7 +187,11 @@ async function execute() {
                     svg { display: inline-block; vertical-align: baseline; width: ${glyphSize}; height: ${glyphSize}; padding: 2px 2px 4px 2px; }
                     div[style*="display:flex"] { gap: 4px; }
                     div { max-width: 100%; }
-                    pre { white-space: pre-wrap; overflow-wrap: break-word; max-width: 100%; }
+                    pre { white-space: pre-wrap; overflow-wrap: break-word; max-width: 100%; background:#efefe7; }
+                    code { color: #550000; }
+                    *:not(pre) > code { background:#efefe7; }
+                    table { border-collapse: collapse; }
+                    table, th, td { border: 1px solid black; }
                     ${borderStyle}
                 </style></head><body>${html}</body></html>`;
                 out.addEventListener('load', () => {
@@ -237,10 +241,6 @@ document.getElementById('font-decrease').addEventListener('click', () => {
 });
 
 document.getElementById('run-btn').addEventListener('click', execute);
-
-document.getElementById('clear-btn').addEventListener('click', () => {
-    document.getElementById('output').innerHTML = '';
-});
 
 execute();
 

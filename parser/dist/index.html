@@ -44,7 +44,7 @@
                     </label>
                     <label class="radio-option">
                         <input type="radio" name="compiler-type" value="raw-HTML">
-                        <span class="radio-label">raw HTML</span>
+                        <span class="radio-label">Raw HTML</span>
                     </label>
                     <label class="radio-option">
                         <input type="radio" name="compiler-type" value="HTML" checked>
@@ -52,7 +52,7 @@
                     </label>
                     <label class="radio-option">
                         <input type="radio" name="compiler-type" value="debug">
-                        <span class="radio-label">debug HTML</span>
+                        <span class="radio-label">Debug HTML</span>
                     </label>
                 </div>
             </div>
@@ -60,7 +60,7 @@
             <div class="settings-section">
                 <div class="settings-label">ASL Glyph borders</div>
                 <label class="toggle-option">
-                    <input type="checkbox" id="show-borders" checked>
+                    <input type="checkbox" id="show-borders">
                     <span class="toggle-track"><span class="toggle-thumb"></span></span>
                     <span class="toggle-text">Show borders</span>
                 </label>
@@ -87,7 +87,6 @@
 
     <div class="controls">
         <button id="run-btn">▶ Run</button>
-        <button class="secondary" id="clear-btn">Clear output</button>
         <button class="secondary icon-btn gear-btn" id="settings-btn" title="Settings" aria-expanded="false">⚙</button>
     </div>
 
@@ -120,8 +119,8 @@
 
         // Font size control
         const sizes = ['0.8em', '1em', '1.2em', '1.5em', '2em', '2.5em', '3em', '4em', '5em', '6em', '7em', '8em', '9em', '10em', '11em', '12em'];
-        let svgSizeIndex  = 1; // default 3rem
-        let fontSizeIndex = 1; // default 3rem
+        let svgSizeIndex  = 6; // default 3rem
+        let fontSizeIndex = 1; // default 1rem
         const svgSizeDisplay  = document.getElementById('svg-size-display');
         const fontSizeDisplay = document.getElementById('font-size-display');
         svgSizeDisplay.textContent  = sizes[svgSizeIndex];

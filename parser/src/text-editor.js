@@ -223,6 +223,7 @@ export function createEditor(parent, initialContent, onChange) {
             aslWriteStream,
             aslWriteTheme,
             errorDecoField,
+            EditorView.lineWrapping,
             syntaxHighlighting(aslWriteHighlight),
             EditorView.updateListener.of(update => {
                 if (update.docChanged) onChange(update.state.doc.toString());
