@@ -13,7 +13,7 @@ export class Visitor {
     }
 
     visit(node) {
-        // console.log('[VISIT]', node);
+        console.log('[VISIT]', node);
         const method = this[`visit${node.type}`];
         if (!method) {
             throw new Error(`No visitor for ${node.type}`);
@@ -48,6 +48,7 @@ export class Visitor {
     //     = statements:Statements _ "===" _ body:Body { return node("Document", { statements    , body }); }
     //     / body:Body                                 { return node("Document", { statements: [], body }); }
     visitDocument(node) {
+        console.log('[DOCUMENT]', node);
         node.statements.forEach( s => this.visit(s) );
         return this.visit(node.body);
     }
@@ -62,29 +63,76 @@ export class Visitor {
         throw new Error("Import resovler failed, Import node left in AST");
     }
 
-    // Definition 
-    //     = idens:IdenList _ "=" _ graphemes:Graphemes _ ";" { return node("Definition", { idens, graphemes            }); }
-    //     / idens:IdenList _ "=" _ grapheme:Grapheme         { return node("Definition", { idens, graphemes:[grapheme] }); }    
-    visitDefinition(node) {
-        // console.log('visit Definition :', node);
-        const val = { type: "Graphemes", val: node.graphemes.map(g => this.visit(g)) };
-        node.idens.forEach( iden => this.env.define(iden, val) );
+    // GraphemeDef
+    //     = idens:IdenList _ "=" _ graphemes:Graphemes _ ";"                                           { return node("GraphemeDef", { idens, args:null, graphemes            }); }
+    //     / idens:IdenList _ "=" _ grapheme:Grapheme                                                   { return node("GraphemeDef", { idens, args:null, graphemes:[grapheme] }); }
+    //     / idens:IdenList SPACE? "(" SPACE? args:ArgList SPACE? ")" _ "=" _ graphemes:Graphemes _ ";" { return node("GraphemeDef", { idens, args,      graphemes            }); }
+    //     / idens:IdenList SPACE? "(" SPACE? args:ArgList SPACE? ")" _ "=" _ grapheme:Grapheme         { return node("GraphemeDef", { idens, args,      graphemes:[grapheme] }); }   
+    visitGraphemeDef(node) {
+        if(node.args === null) {
+            const val = { type: "Graphemes", val: node.graphemes.map(g => this.visit(g)) };
+            node.idens.forEach( iden => this.env.define(iden, val) );
+        } else {
+            node.idens.forEach(iden => this.env.define(
+                iden, 
+                { type:'Fn->Graphemes', args: node.args, body: node.graphemes }
+            ));
+        }
     }
 
-    // name:IDEN { return node("Iden", { name }); }
+    // ExprDef
+    // = idens:IdenList _ "=" _ expr:Expr                                           { return node("ExprDef", { idens, args:null, expr }); }
+    // / idens:IdenList SPACE? "(" SPACE? args:ArgList SPACE? ")" _ "=" _ expr:Expr { return node("ExprDef", { idens, args,      expr }); }
+    visitExprDef(node) {
+        if(node.args === null) { // number variable
+            node.idens.forEach( iden => this.env.define(iden, this.visit(node.expr)) );
+        } else { // number function
+            node.idens.forEach(iden => this.env.define(
+                iden, 
+                { type:'Fn->Number', args: node.args, body: node.expr }
+            ));
+        }
+    }
+
+    // Iden = name:IDEN { return node("Iden", {name})   }
     visitIden(node) {
-        const val = this.env.lookup(node.name);
-        return val;
+        const captureScope = this.env;
+        return { type: "thunk", as:(type) => captureScope.lookup(node.name, type) };
+    }
+
+    //unwrap a thunk, or pass-through non-lazy value
+    asType(node, type) {
+        console.log('[AS TYPE]', type, node);
+        if(node.type === "thunk") {
+            const as = node.as(type);
+            console.log('[AS TYPE]', as);
+            return as;
+        }
+
+        if(node.type === type) {
+            console.log('[AS TYPE]', node);
+            return node;
+        }
+
+        return null;
     }
 
     // Block = "{" _ comms:Commands _ "}" { return node("Block", {comms} ); }
     visitBlock(node) {
-        const turtle = new Turtle(this.debug);
-        this.turtle = turtle;
-
+        const prevTurtle = this.turtle;
+        const prevEnv = this.env;
+        
+        this.turtle = new Turtle(this.debug);
+        this.env = new Env(this.env); // new scope inheriting from parent
+        
         node.comms.forEach(c => this.visit(c));
-
-        return turtle.toSVG();
+        
+        const result = this.turtle.toSVG();
+        
+        this.turtle = prevTurtle;
+        this.env = prevEnv;
+        
+        return result;
     }
 
     // "[" _ comms:Commands _ "]"   { return node("Bracket", { comms }); }
@@ -100,23 +148,23 @@ export class Visitor {
     visitCommand(node) {
         const args = node.args.map( a => this.visit(a) );
         // console.log('[ARGS]', args);
-        this.turtle.runCommand(node.name, args);
+        this.turtle.runCommand(node.name, args, (n,t)=>this.asType(n,t), gs => this.flattenGraphemes(gs));
     }
 
     // return node("Prod", { head, tail:tail.map( t => {op:t[1], val:t[3]}) }); 
-    visitProd(node) {
-        //console.log('[PROD]', node);
+    visitProd(node) { 
+        console.log('[PROD]', node);
         const head = this.visit(node.head);
         return { 
             type: 'Number', 
             val : node.tail.reduce( (acc, t) => {
                 const factor = this.visit(t.val);
-                //console.log('[PROD REDUCE]', acc, t, factor);
+                console.log('[PROD REDUCE]', acc, t, factor);
                 if(t.op == '*')
-                    return acc * factor.val
+                    return acc * this.asType(factor, 'Number').val
                 else
-                    return acc / factor.val
-            }, head.val ) 
+                    return acc / this.asType(factor, 'Number').val
+            }, this.asType(head, 'Number').val ) 
         };
     }
 
@@ -130,22 +178,69 @@ export class Visitor {
                 const factor = this.visit(t.val);
                 //console.log('[SUM REDUCE]', acc, t, factor);
                 if(t.op == '+')
-                    return acc + factor.val
+                    return acc + this.asType(factor, 'Number').val
                 else
-                    return acc - factor.val
-            }, head.val ) 
+                    return acc - this.asType(factor, 'Number').val
+            }, this.asType(head, 'Number').val ) 
         };
     }
 
     // op:("+"/"-") child:Expr { return node("UnaryOp", {op, child}); }
     visitUnaryOp(node) {
         switch(node.op){
-            case "+": return this.visit(node.child);
+            case "+": return this.asType(this.visit(node.child), 'Number');
             case "-": 
                 const child = this.visit(node.child);
-                child.val *= -1;
-                return child;
+                const resolved = this.asType(child, 'Number');
+                return { type: 'Number', val: -resolved.val };
             default: throw new Error(`Unknown unary op: ${node.op}`);
+        }
+    }
+
+    // / fname:Iden _ "(" _ args:ArgList _ ")"  { return node("Call", {fname, args}); }
+    visitCall(node) {
+        return {
+            type: "thunk",
+            as  : (type) => {
+                console.log('[AS]', type)
+                const fnNode = this.env.lookup(node.fname.name, `Fn->${type}`);
+                const actualArgs = node.args.map( a => this.visit(a) );
+                if(actualArgs.length !== fnNode.args.length) {
+                    const s = fnNode.args.length==1 ? "" : "s";
+                    throw new Error(`Function ${node.fname} expects ${fnNode.args.length} argument${s}, not ${actualArgs.length}`);
+                }
+
+                const curScope = this.env;
+                this.env = new Env(curScope);
+
+                const curTurtle = this.turtle;
+                this.turtle = new Turtle(this.debug);
+                console.log('[CALL]', 'new scope/turtle', this.turtle.transform );
+            
+                for(let i = 0; i < actualArgs.length; i++) {
+                    console.log('[CALL]', fnNode.args[i].name, actualArgs[i] );
+                    if(actualArgs[i].type === 'Grapheme') 
+                        actualArgs[i] = { type: "Graphemes", val: [actualArgs[i]] }
+                    this.env.define( fnNode.args[i].name, actualArgs[i] );
+                }
+
+                console.log('[CALL]', fnNode.type );
+
+                let val;
+                if(fnNode.type === 'Fn->Graphemes') {
+                    console.log("[FN->GRAPHEME BODY]", fnNode.body)
+                    
+                    val = { type: "Graphemes", val: fnNode.body.map(g => this.visit(g)) };
+                } else {
+                    val = this.visit(fnNode.body);
+                }
+
+                console.log('[CALL]', 'close scope' );
+
+                this.env = curScope;
+                this.turtle = curTurtle;
+                return val;
+            }
         }
     }
 
@@ -183,14 +278,24 @@ export class Visitor {
 
     // helper for visiting a grapheme that might be a single grapheme or a list
     visitGrapheme(node) {
+        console.log('[GRAPHEME NODE]', node);
         const result = this.visit(node);
-        return this.flattenGraphemes(result);
+        const flat = this.flattenGraphemes(result)
+        console.log('[GRAPHEME FLAT]', flat);
+        return flat;
     }
 
     flattenGraphemes(result) {
-        if (result?.type === "Graphemes") {
-            return result.val.flatMap(v => this.flattenGraphemes(v));
+        const graphemesResult = this.asType(result, "Graphemes")
+        if (graphemesResult?.type === "Graphemes") {
+            console.log('[FLATTEN GRAPHEMES]', graphemesResult)
+            return graphemesResult.val.flatMap(v => this.flattenGraphemes(v));
         }
+        if (graphemesResult?.type === "thunk") {
+            console.log('[FLATTEN THUNK]', graphemesResult)
+            return this.asType(graphemesResult, "Graphemes").val.flatMap(v => this.flattenGraphemes(v));
+        }
+        console.log('[FLATTEN OTHER]', result)
         return [result];
     }
 
@@ -208,7 +313,9 @@ export class Visitor {
 
     // "@" graphemes:Graphemes "@"
     visitAslInline(node) {
-        const glyphs = node.graphemes.flatMap(g => this.visitGrapheme(g));
+        console.log('[ASL INLINE]', node);
+        let glyphs = node.graphemes.flatMap(g => this.visitGrapheme(g));
+        console.log('[ASL INLINE]', glyphs);
         return `<span style="display:inline-flex;flex-wrap:wrap;align-items:baseline;">${glyphs.map(g => g.fullHTML).join('')}</span>`;
     }
 

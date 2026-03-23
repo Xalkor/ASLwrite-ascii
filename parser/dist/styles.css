@@ -260,7 +260,7 @@ kbd {
     min-height: 0;
 }
 
-.tab-bar {
+/* .tab-bar {
     flex-shrink: 0;
 }
 .tab {
@@ -273,7 +273,35 @@ kbd {
     font-size: 0.8rem;
     cursor: pointer;
     letter-spacing: 0.05em;
+} */
+
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 1;
+    min-width: 0;
+    scrollbar-width: none; /* hide scrollbar on firefox */
 }
+
+.tab-bar::-webkit-scrollbar {
+    display: none; /* hide scrollbar on chrome/safari */
+}
+.tab {
+    background: #1f2937;
+    color: #9ca3af;
+    border: 1px solid #374151;
+    border-radius: 5px 5px 0 0;
+    padding: 5px 14px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .tab:hover { background: #374151; }
 .tab.active {
     background: #7c3aed;

@@ -20,6 +20,33 @@ const signatures = {
     curveto: [{
         types: ['Number', 'Number', 'Number', 'Number', 'Number', 'Number'],
         method: (turtle, x, y, c1x, c1y, c2x, c2y) => turtle.curveto(x, y, c1x, c1y, c2x, c2y)
+    },{
+        types: ['Number', 'Number', 'Number', 'Number'],
+        method: (turtle, x, y, cx, cy) => turtle.curveto(x, y, cx, cy, cx, cy)
+    }],
+    smoothto: [{
+        types: ['Number', 'Number', 'Number', 'Number'],
+        method: (turtle, x, y, cx, cy) => turtle.smoothto(x, y, cx, cy, cx, cy)
+    }],
+    arcto: [{
+        types: ['Number', 'Number', 'Number'],
+        method: (turtle, x, y, r) => turtle.arcto(x, y, r, r, false, 1)
+    },{
+        types: ['Number', 'Number', 'Number', 'Number'],
+        method: (turtle, x, y, r, dir) => turtle.arcto(x, y, r, r, false, dir)
+    },{
+        types: ['Number', 'Number', 'Number', 'Number', 'Number'],
+        method: (turtle, x, y, rx, ry, dir) => turtle.arcto(x, y, rx, ry, false, dir)
+    }],
+    largearcto: [{
+        types: ['Number', 'Number', 'Number'],
+        method: (turtle, x, y, r) => turtle.arcto(x, y, r, r, true, 1)
+    },{
+        types: ['Number', 'Number', 'Number', 'Number'],
+        method: (turtle, x, y, r, dir) => turtle.arcto(x, y, r, r, true, dir)
+    },{
+        types: ['Number', 'Number', 'Number', 'Number', 'Number'],
+        method: (turtle, x, y, rx, ry, dir) => turtle.arcto(x, y, rx, ry, true, dir)
     }],
     draw: [{
         types: ['Graphemes'],
@@ -35,6 +62,12 @@ const signatures = {
     flip: [{
         types: [],
         method: (turtle) => turtle.flip()
+    },{
+        types: ['Graphemes'],
+        method: (turtle, gs) => { console.log('[FLIP DRAW]'); turtle.flip(); gs.forEach(g => turtle.draw(g)) }
+    },{
+        types: ['Graphemes', 'Number', 'Number'],
+        method: (turtle, gs, w, h) => { turtle.flip(); gs.forEach(g => turtle.draw(g, w, h)) }
     }],
     pendown: [{
         types: [],
@@ -91,6 +124,7 @@ export class Turtle {
 
         this.debug = debug;
         this.debugControlPoints = debug ? [] : null;
+        this.debugArcs = debug ? [] : null;
     }
 
     push() {
@@ -127,6 +161,7 @@ export class Turtle {
     }
 
     draw(grapheme, w = null, h = null) {
+        console.log('[DRAW]', this);
         let transformMatrix = this.transform;
 
         if (w !== null && h !== null) {
@@ -149,6 +184,7 @@ export class Turtle {
     }
 
     goto(x, y) {
+        console.log('[GOTO]', x,y);
         if (this.isPenDown) {
             this.currentPath.push(new SVGSeg("L", x, y));
         }
@@ -162,6 +198,62 @@ export class Turtle {
         }
         if (this.debug) {
             this.debugControlPoints.push({ x, y, c1x, c1y, c2x, c2y, fromX: this.transform.e, fromY: this.transform.f });
+        }
+        this.transform.e = x;
+        this.transform.f = y;
+    }
+
+    smoothto(x, y, cx, cy) {
+        if (this.isPenDown) {
+            this.currentPath.push(new SVGSeg("S", cx, cy, x, y));
+        }
+        if (this.debug) {
+            this.debugControlPoints.push({ x, y, c2x:cx, c2y:cy, fromX: this.transform.e, fromY: this.transform.f });
+        }
+        this.transform.e = x;
+        this.transform.f = y;
+    }
+
+
+    computeArcCenter(x1, y1, x2, y2, rx, ry, large, sweep) {
+        // midpoint
+        const mx = (x1 - x2) / 2;
+        const my = (y1 - y2) / 2;
+
+        const rx2 = rx * rx, ry2 = ry * ry;
+        const mx2 = mx * mx, my2 = my * my;
+
+        const num = Math.max(0, rx2 * ry2 - rx2 * my2 - ry2 * mx2);
+        const den = rx2 * my2 + ry2 * mx2;
+        const sq = den === 0 ? 0 : Math.sqrt(num / den);
+        const sign = (large === sweep) ? -1 : 1;
+
+        const cx1 =  sign * sq * (rx * my / ry);
+        const cy1 = -sign * sq * (ry * mx / rx);
+
+        // transform back
+        const cx = cx1 + (x1 + x2) / 2;
+        const cy = cy1 + (y1 + y2) / 2;
+
+        return { cx, cy };
+    }
+    arcto(x, y, rx, ry, large, dir) {
+        const sweep = dir >= 0 ? 1 : 0;
+        const largeFlag = large ? 1 : 0;
+
+        if (this.isPenDown) {
+            this.currentPath.push(new SVGSeg("A", Math.abs(rx), Math.abs(ry), 0, largeFlag, sweep, x, y));
+        }
+        if (this.debug) {
+            const { cx, cy } = this.computeArcCenter(
+                this.transform.e, this.transform.f,
+                x, y, Math.abs(rx), Math.abs(ry), largeFlag, sweep
+            );
+            this.debugArcs.push({ 
+                x1: this.transform.e, y1: this.transform.f,
+                x2: x, y2: y,
+                cx, cy
+            });
         }
         this.transform.e = x;
         this.transform.f = y;
@@ -208,13 +300,26 @@ export class Turtle {
             );
             for (const cp of this.debugControlPoints) {
                 // console.log('[CONTROL POINT]', cp);
+                if(cp.c1x != undefined) {
                 debugElems += (
-                    `<circle cx="${cp.c1x}" cy="${cp.c1y}" r="4" fill="blue" opacity="0.6"/>`   +
-                    `<circle cx="${cp.c2x}" cy="${cp.c2y}" r="4" fill="green" opacity="0.6"/>`  +
-                    `<line x1="${cp.fromX}" y1="${cp.fromY}" x2="${cp.c1x}" y2="${cp.c1y}"` +
-                        ` stroke="blue" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>`    +
-                    `<line x1="${cp.x}" y1="${cp.y}" x2="${cp.c2x}" y2="${cp.c2y}"`         +
+                        `<circle cx="${cp.c1x}" cy="${cp.c1y}" r="4" fill="blue" opacity="0.6"/>`    +
+                        `<line x1="${cp.fromX}" y1="${cp.fromY}" x2="${cp.c1x}" y2="${cp.c1y}"`      +
+                            ` stroke="blue" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>`
+                    );
+                }
+                debugElems += (
+                    `<circle cx="${cp.c2x}" cy="${cp.c2y}" r="4" fill="green" opacity="0.6"/>`    +
+                    `<line x1="${cp.x}" y1="${cp.y}" x2="${cp.c2x}" y2="${cp.c2y}"`               +
                         ` stroke="green" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>`
+                );
+            }
+            for (const arc of this.debugArcs) {
+                debugElems += (
+                    `<circle cx="${arc.cx}" cy="${arc.cy}" r="4" fill="purple" opacity="0.6"/>` +
+                    `<line x1="${arc.cx}" y1="${arc.cy}" x2="${arc.x1}" y2="${arc.y1}" ` +
+                        `stroke="purple" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>` +
+                    `<line x1="${arc.cx}" y1="${arc.cy}" x2="${arc.x2}" y2="${arc.y2}" ` +
+                        `stroke="purple" stroke-width="4" stroke-dasharray="3,3" opacity="0.6"/>`
                 );
             }
             // console.log('[DEBUG ELEMENTS]', debugElems);
@@ -236,7 +341,7 @@ export class Turtle {
         return { type: "Grapheme", turtle: this, fullHTML, innerPaths:innerPaths+debugElems };
     }
 
-    runCommand(name, args) {
+    runCommand(name, args, unwrapArg, flattenGraphemes) {
         if (!signatures.hasOwnProperty(name)) {
             throw new Error(`No drawing command called: ${name}`);
         }
@@ -253,20 +358,25 @@ export class Turtle {
 
         for (const sig of arityMatches) {
             let mismatchIndex = -1;
-
+            let unwrapedArgs = [];
             for (let i = 0; i < args.length; i++) {
                 const expected = sig.types[i];
-                const actual = args[i].type;
+                let actual = unwrapArg(args[i], expected);
 
-                if (expected !== actual) {
+                if (actual === null) {
                     mismatchIndex = i;
                     break;
                 }
+
+                if (actual.type === 'Graphemes') actual = {'val':flattenGraphemes(actual)};
+
+                unwrapedArgs.push(actual);
+                console.log('[RUN COMMAND]', actual);
             }
 
             if (mismatchIndex === -1) {
                 // perfect match
-                return sig.method(this, ...args.map(a => a.val));
+                return sig.method(this, ...unwrapedArgs.map(a => a.val));
             } else {
                 const expected = sig.types[mismatchIndex];
                 const actual = args[mismatchIndex].type;

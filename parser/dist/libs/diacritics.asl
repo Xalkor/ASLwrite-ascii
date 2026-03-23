@@ -5,7 +5,7 @@
 +--------------------------------+
 */
 
-~,flutter = {
+~ flutter = {
   penup
   goto -100 120
   pendown

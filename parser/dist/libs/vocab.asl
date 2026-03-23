@@ -8,33 +8,25 @@
 import diacritics
 import handshapes
 import arrows
+import layouts
 
-I,me = {
+I me = {
   [turn 180; draw num_1]
   goto 30 10
   draw arrow_to_me
 }
 want = {
-  goto -50 +50
-  draw num_5 85 85
-  
-  goto +50 +50
-  [flip; draw num_5 85 85]
-  
-  goto -50 -50
-  [flip; draw claw_5 85 85]
-  
-  goto +50 -50
-  draw claw_5 85 85
-  
+  draw quad_layout(
+    num_5          {flip num_5} 
+    {flip claw_5}  claw_5
+  )
   goto 0 50
   draw arrow_to_me
 }
-study = {
-  goto -50 -50
-  [turn 75; draw close_5 85 85]
-  goto 50 50
-  [turn -170; flip; draw num_5 85 85; draw ~ 85 85]
-}
+study = quad_layout(
+  {}                      {turn -160; draw num_5; draw ~}
+  {turn 75; draw close_5} {}
+)
+
 ===
 @I want study@

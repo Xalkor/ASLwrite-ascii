@@ -16,22 +16,30 @@ Start = _ doc:Document _ { return doc; }
 
 Document = statements:Statements _ "===" _ body:Body { return node("Document", { statements, body }); }
 
-Statements = head:Statement tail:(NEW_LINE+ Statement)* { return flatten(head, tail); }
+Statements = head:Statement tail:(_ Statement)* { return flatten(head, tail); }
 
-Statement = Import / Definition
-
+Statement = Import / Definition 
 Import = "import" SPACE path:PATH { return node("Import", { path: path.trim() }) }
 
-Definition 
-    = idens:IdenList _ "=" _ graphemes:Graphemes _ ";" { return node("Definition", { idens, graphemes            }); }
-    / idens:IdenList _ "=" _ grapheme:Grapheme         { return node("Definition", { idens, graphemes:[grapheme] }); }
+Definition = GraphemeDef / ExprDef
 
-IdenList = head:IDEN tail:("," _? IDEN)* { return flatten(head, tail, 2); }
+GraphemeDef
+    = idens:IdenList _ "=" _ graphemes:Graphemes _ ";"                                 { return node("GraphemeDef", { idens, args:null, graphemes            }); }
+    / idens:IdenList _ "=" _ grapheme:Grapheme                                         { return node("GraphemeDef", { idens, args:null, graphemes:[grapheme] }); }
+    / idens:IdenList SPACE? "(" _ args:ArgList _ ")" _ "=" _ graphemes:Graphemes _ ";" { return node("GraphemeDef", { idens, args,      graphemes            }); }
+    / idens:IdenList SPACE? "(" _ args:ArgList _ ")" _ "=" _ grapheme:Grapheme         { return node("GraphemeDef", { idens, args,      graphemes:[grapheme] }); }
+
+ExprDef
+    = idens:IdenList _ "=" _ expr:Expr                                           { return node("ExprDef", { idens, args:null, expr }); }
+    / idens:IdenList SPACE? "(" _ args:ArgList _ ")" _ "=" _ expr:Expr { return node("ExprDef", { idens, args,      expr }); }
+
+IdenList = head:IDEN tail:(SPACE IDEN)* { return flatten(head, tail); }
 
 Graphemes = head:Grapheme tail:(_ Grapheme)* { return flatten(head, tail); }
 
 Grapheme
-    = Iden
+    = fname:Iden _ "(" _ args:ArgList _ ")"  { return node("Call", {fname, args}); }
+    / Iden
     / Block
 
 Block = "{" _ comms:Commands _ "}" { return node("Block", {comms} ); }
@@ -43,14 +51,17 @@ Commands
     / ""                                      { return []; }
 
 Command
-    = "[" _ comms:Commands _ "]"   { return node("Bracket", { comms }); }
-    / name:IDEN SPACE args:ArgList { return node("Command", { name, args     }); }
-    / name:IDEN                    { return node("Command", { name, args: [] }); }
+    = "[" _ comms:Commands _ "]"          { return node("Bracket", { comms }); }
+    / name:IDEN SPACE args:ArgListOneLine { return node("Command", { name, args     }); }
+    / name:IDEN                           { return node("Command", { name, args: [] }); }
 
-ArgList 
+ArgListOneLine 
     = head:Arg tail:(SPACE Arg)* { return flatten(head, tail); }
 
-Arg = Expr
+ArgList 
+    = head:Arg tail:(_ Arg)* { return flatten(head, tail); }
+
+Arg = Expr / Block
 
 Expr
   = TerminalExpr
@@ -76,7 +87,8 @@ Factor
     / Iden
 
 TerminalExpr
-    = op:("+"/"-") !SPACE child:Factor { return node("UnaryOp", {op, child}); }
+    = op:("+"/"-") !SPACE child:Factor       { return node("UnaryOp", {op, child}); }
+    / fname:Iden _ "(" _ args:ArgList _ ")"  { return node("Call", {fname, args}); }
     / Num
     / Iden 
 
@@ -126,7 +138,7 @@ InlineMath  = "$"   text:$(!"$"   .)* "$"   { return "$"    + text + "$"    }
 
 PATH = $([^\n\r=][^\n\r]*)
 
-Iden = name:IDEN { return node("Iden", {name}) }
+Iden = name:IDEN { return node("Iden", {name})  }
 Num  = val:NUM   { return node("Number", {val}) }
 
 IDEN = $([_a-zA-Z~][_a-zA-Z0-9~]*)

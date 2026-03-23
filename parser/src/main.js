@@ -6,27 +6,39 @@ import { Visitor } from "./visitor.js";
 import initialSource    from '../../README.asl';
 import vocabSource      from '../dist/libs/vocab.asl';
 import handshapesSource from '../dist/libs/handshapes.asl';
+import alphabetSource   from '../dist/libs/alphabet.asl';
 import diacriticsSource from '../dist/libs/diacritics.asl';
+import arrowsSource     from '../dist/libs/arrows.asl';
+import layoutsSource    from '../dist/libs/layouts.asl';
 
 const tabContents = {
-    readme:     initialSource,
-    vocab:      vocabSource,
-    diacritics: diacriticsSource,
-    handshapes: handshapesSource,
-    scratch:    'import vocab\n===\n# Example document\n\nTry playing around!'
+    readme:     { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: initialSource},
+    vocab:      { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: vocabSource},
+    diacritics: { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: diacriticsSource},
+    handshapes: { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: handshapesSource},
+    arrows:     { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: arrowsSource},
+    layouts:    { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: layoutsSource},
+    alphabet:   { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: alphabetSource},
+    scratch:    { edit_sx: 0, edit_sy: 0, out_sx: 0, out_sy: 0, content: 'import vocab\nimport alphabet\n===\n# Example document\n\nTry playing around!'}
 };
 
 let activeTab = 'readme';
 
 function switchTab(tabName) {
-    tabContents[activeTab] = getEditorContent(editor);
+    const out = document.getElementById('output');
+    tabContents[activeTab].out_sx  = out.contentDocument?.documentElement?.scrollLeft ?? 0;
+    tabContents[activeTab].out_sy  = out.contentDocument?.documentElement?.scrollTop  ?? 0;
+    tabContents[activeTab].edit_sx = editor.scrollDOM.scrollLeft;
+    tabContents[activeTab].edit_sy = editor.scrollDOM.scrollTop;
+
+    tabContents[activeTab].content = getEditorContent(editor);
     activeTab = tabName;
 
     editor.dispatch({
         changes: {
             from: 0,
             to: editor.state.doc.length,
-            insert: tabContents[activeTab]
+            insert: tabContents[activeTab].content
         }
     });
 
@@ -118,19 +130,29 @@ function escapeHTML(str) {
 }
 
 // visit all imported files
-export async function resolveImports(ast) {
+async function resolveImports(ast, tabContents) {
     const resolvedStatements = [];
     for (const stmt of ast.statements) {
         if (stmt.type === 'Import') {
-            const source = await fetch('libs/' + stmt.path + '.asl').then(r => {
-                if (!r.ok) throw new Error(`Could not import "${stmt.path}.asl": ${r.status} ${r.statusText}`);
-                return r.text();
-            });
-            const importedAst = parse(source);
-            // recursively resolve imports in the imported file
-            await resolveImports(importedAst);
-            // only inject definitions, ignore body
-            resolvedStatements.push(...importedAst.statements.filter(s => s.type === 'Definition'));
+            try {
+                const tabKey = Object.keys(tabContents).find(k => 
+                    k === stmt.path || k === stmt.path.replace('.asl', '')
+                );
+                //console.log('[RESOLVE]', tabKey);
+                const source = tabKey 
+                    ? tabContents[tabKey].content
+                    : await fetch('libs/' + stmt.path + '.asl').then(r => {
+                        if (!r.ok) throw new Error(`Could not import "${stmt.path}.asl": ${r.status} ${r.statusText}`);
+                        return r.text();
+                    });
+                //console.log('[RESOLVE]', source);
+
+                const importedAst = parse(source);
+                await resolveImports(importedAst, tabContents);
+                resolvedStatements.push(...importedAst.statements.filter(s => s.type !== 'Import'));
+            } catch(e) {
+                throw new Error(`Import "${stmt.path}" failed: ${e.message}`);
+            }
         } else {
             resolvedStatements.push(stmt);
         }
@@ -161,18 +183,21 @@ async function execute() {
                 out.srcdoc = `<!DOCTYPE html><html><body><pre>${lines}</pre></body></html>`;
                 break;
             case "raw-HTML":
-                await resolveImports(ast);
+                await resolveImports(ast, tabContents);
                 out.srcdoc = `<!DOCTYPE html><html><body><pre>${escapeHTML(visitor.visit(ast))}</pre></body></html>`;
                 break;
             case "Markdown":
-                await resolveImports(ast);
+                await resolveImports(ast, tabContents);
                 out.srcdoc = `<!DOCTYPE html><html><body><pre>${escapeHTML(visitor.visitDocumentRaw(ast))}</pre></body></html>`;
                 break;
             case "debug":
                 visitor.debug = true;
             case "HTML":
-                await resolveImports(ast);
-                const prevScroll = out.contentDocument?.documentElement?.scrollTop ?? 0;
+                tabContents[activeTab].out_sy = out.contentDocument.documentElement.scrollTop ;
+                tabContents[activeTab].out_sx = out.contentDocument.documentElement.scrollLeft;
+                tabContents[activeTab].edit_sy = editor.scrollDOM.scrollTop ;
+                tabContents[activeTab].edit_sx = editor.scrollDOM.scrollLeft;
+                await resolveImports(ast, tabContents);
                 const html = visitor.visit(ast);
                 const showBorders = document.getElementById('show-borders').checked;
                 const borderStyle = showBorders 
@@ -195,7 +220,10 @@ async function execute() {
                     ${borderStyle}
                 </style></head><body>${html}</body></html>`;
                 out.addEventListener('load', () => {
-                    out.contentDocument.documentElement.scrollTop = prevScroll;
+                    out.contentDocument.documentElement.scrollTop  = tabContents[activeTab].out_sy;
+                    out.contentDocument.documentElement.scrollLeft = tabContents[activeTab].out_sx;
+                    editor.scrollDOM.scrollTop  = tabContents[activeTab].edit_sy;
+                    editor.scrollDOM.scrollLeft = tabContents[activeTab].edit_sx;
                 }, { once: true });
                 break;
             default:
@@ -211,7 +239,7 @@ async function execute() {
             out.srcdoc = `<!DOCTYPE html><html><body><div style="color:#911c1c;font-family:monospace;padding:12px;">${msg}</div></body></html>`;
             highlightError(editor, start, end);
         } else {
-            out.srcdoc = `<!DOCTYPE html><html><body><div style="color:#911c1c;font-family:monospace;padding:12px;">${e.message}</div></body></html>`;
+            out.srcdoc = `<!DOCTYPE html><html><body><pre style="color:#911c1c;font-family:monospace;padding:12px;">${e.message}\n${e.stack}</pre></body></html>`;
         }
     }
 }

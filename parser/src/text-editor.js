@@ -14,6 +14,7 @@ const aslWriteStream = StreamLanguage.define({
     },
 
     token(stream, state) {
+        const keywords = /\b(penup|pendown|forward|turn|goto|size|face|draw|flip|curveto|smoothto|arcto|largearcto)\b/;
 
         // ── Block comment (works in any mode) ────────────────────────────
         if (state.mode === 'blockComment') {
@@ -32,7 +33,7 @@ const aslWriteStream = StreamLanguage.define({
             if (stream.match('//')) { stream.skipToEnd(); return 'comment'; }
             if (stream.match('===')) { state.mode = 'markdown'; return 'separator'; }
             if (stream.match(/\d+/)) return 'number';
-            if (stream.match(/\b(penup|pendown|forward|turn|goto|size|face|draw|flip|curveto)\b/)) return 'keyword';
+            if (stream.match(keywords)) return 'keyword';
                 if (stream.match(/import\b/)) {
                 // check if it's a definition or an import
                 const rest = stream.string.slice(stream.pos).trimStart();
@@ -63,15 +64,17 @@ const aslWriteStream = StreamLanguage.define({
                 }
                 return null;
             }
+            if(stream.match(/\{|\}/)) return 'brace';
             stream.next();
             return null;
         }
 
         // ── ASL inline mode (@...@) ───────────────────────────────────────
         if (state.mode === 'aslInline') {
+            if (stream.match('//')) { stream.skipToEnd(); return 'comment'; }
             if (stream.match('@')) { state.mode = 'markdown'; return 'separator'; }
             if (stream.match(/\d+/)) return 'number';
-            if (stream.match(/\b(penup|pendown|forward|turn|goto|size|face|draw|flip|curveto)\b/)) return 'keyword';
+            if (stream.match(keywords)) return 'keyword';
             if (stream.match(/~?[a-zA-Z_][a-zA-Z0-9_~]*/)) return 'variableName';
             if (stream.match(/~/)) return 'typeName';
             stream.next();
@@ -80,9 +83,10 @@ const aslWriteStream = StreamLanguage.define({
 
         // ── ASL block mode (@@@...@@@) ────────────────────────────────────
         if (state.mode === 'aslBlock') {
+            if (stream.match('//')) { stream.skipToEnd(); return 'comment'; }
             if (stream.match('@@@')) { state.mode = 'markdown'; return 'separator'; }
             if (stream.match(/\d+/)) return 'number';
-            if (stream.match(/\b(penup|pendown|forward|turn|goto|size|face|draw|flip|curveto)\b/)) return 'keyword';
+            if (stream.match(keywords)) return 'keyword';
             if (stream.match(/~?[a-zA-Z_][a-zA-Z0-9_~]*/)) return 'variableName';
             if (stream.match(/~/)) return 'typeName';
             stream.next();
@@ -208,6 +212,7 @@ const aslWriteHighlight = HighlightStyle.define([
     { tag: tags.keyword,      color: '#b36aa8', fontWeight: 'bold' },
     { tag: tags.typeName,     color: '#c25671' },
     { tag: tags.operator,     color: '#C89B7B' },
+    { tag: tags.brace,        color: '#c8c57b', fontWeight: 'bold' },
     { tag: tags.paren,        color: '#c8c57b', fontWeight: 'bold' },
     { tag: tags.variableName, color: '#7584c3' },
     { tag: tags.separator,    color: '#95AF6E', fontWeight: 'bold' },
